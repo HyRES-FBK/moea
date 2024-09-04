@@ -1,4 +1,4 @@
-# MANTHOVA
+# :ship: MANTHOVA
 
 <a target="_blank" href="https://cookiecutter-data-science.drivendata.org/">
     <img src="https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter" />
@@ -9,7 +9,7 @@ The repository for the MANTHOVA project.
 The framework proposed in this repository aims to simplify the interaction of users with
 EnergyPLAN through Python when developing optmization algorithms.
 
-## Requirements
+## :page_with_curl: Requirements
 
 The MOEA package works only in Windows because EnergyPLAN runs only in Windows.
 
@@ -34,13 +34,13 @@ and remember to activate it using the command
 conda activate manthova
 ```
 
-### Scenario generation
+### :movie_camera: Scenario generation
 
 Setup the experiment directly in EnergyPLAN, which provides a handy GUI.
 When a scenario has been configured, experimental parameters are stored in a data file, which path is required to run the algorithm.
 The decision variables are a subset of the parameters in the input file and the algorithms will change only those values, leaving all the other parameters unchanged.
 
-### Define a model
+### :sparkles: Define a model
 
 Here the word model is used to indicate the problem to be optimized, which a user-defined model of reality.o
 
@@ -82,7 +82,7 @@ moea run ALGORITHM MODEL
 which runs the algorithm with default parameters.
 The list of optional MOEA parameters, e.g., number of individuals in the initial population, number of generations, etc., can be listed using the ``--help`` flag for the ``run`` command.
 
-## Project Organization
+## :briefcase: Project Organization
 
 ```
 ├── LICENSE            <- Open-source license if one is chosen
