@@ -1,0 +1,22 @@
+name: manthova
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - black
+  - flake8
+  - isort
+  - pip
+  - typer
+  - loguru
+  - ipython
+  - jupyterlab
+  - matplotlib
+  - notebook
+  - numpy
+  - pandas
+  - pip:
+    - python-dotenv
+    - mkdocs
+    - pymoo
+    - -e .
