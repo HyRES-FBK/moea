@@ -60,3 +60,5 @@ def run(
         algorithm=algorithm,
         verbose=True
     )
+
+    logger.info("Optimization finished.")

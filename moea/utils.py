@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from typing import Union, List, Tuple
 from pathlib import Path
-from moea.config import ENERGYPLAN_EXE, ENERGYPLAN_SPOOL
+from moea.config import ENERGYPLAN_EXE, ENERGYPLAN_SPOOL, ENERGYPLAN_RESULTS
 from functools import lru_cache
 
 """
@@ -163,7 +163,7 @@ def find_position(file_path: Union[str, Path], key: str) -> Tuple[int, int]:
     """
     Return the line number of a specific key in a file.
     """
-    for i, line in enumerate(open(file_path, 'r')):
+    for i, line in enumerate(open(file_path, 'r', encoding='windows-1252')):
         line = [ln.strip() for ln in line.split('\t')]
         for j, col in enumerate(line):
             if key in col:
@@ -176,14 +176,13 @@ def find_objectives(file_path: Union[str, Path], *keys: str) -> List[float]:
     immediately after the key.
     """
     values = []
-    with open(file_path, 'r') as f:
+    with open(file_path, 'r', encoding='windows-1252') as f:
         lines = f.readlines()
         for key in keys:
             line, row = find_position(file_path, key)
             values.append(
                 float(lines[line].split('\t')[row].strip().replace(',', '.')))
     return np.array(values)
-
 
 def find_values(results_folder: Union[str, Path], *keys: str) -> np.ndarray:
     values = []
@@ -236,6 +235,22 @@ def dump_input(input_dict: dict, i: int, data_file: Union[str, Path]) -> None:
     with open(ENERGYPLAN_SPOOL / f"input{i}.txt", 'w') as f:
         for k, v in data.items():
             f.write(f"{k}=\n{v}\n")
+
+
+def clean_spool_folder() -> None:
+    """
+    Clean the spool folder.
+    """
+    for file in ENERGYPLAN_SPOOL.glob('*.txt'):
+        file.unlink()
+
+
+def clean_results_folder() -> None:
+    """
+    Clean the results folder.
+    """
+    for file in ENERGYPLAN_RESULTS.glob('*.txt'):
+        file.unlink()
 
 
 if __name__ == "__main__":
