@@ -16,13 +16,13 @@ The MOEA package works only in Windows because EnergyPLAN runs only in Windows.
 EnergyPLAN is provided with the repository and no separate download is required.
 If you want to use a different version of EnergyPLAN, you can substitute the folder
 named ``EnergyPLAN`` ensuring that the folder structure remains the same and that
-the folders ``spool`` and ``spool/results`` have been created.
+the folders ``spool`` and ``spool/results`` exist.
 
 The only requirement of the project is to have Conda available to generate a Python environment.
 
 ## :rocket: Quickstart
 
-To get started, install the conda environment via
+To get started, create a conda environment via
 
 ```bash
 conda env create -f environment.yml
@@ -36,15 +36,21 @@ conda activate manthova
 
 ### :movie_camera: Scenario generation
 
-Setup the experiment directly in EnergyPLAN, which provides a handy GUI.
+Setup of an experiment is carried out in EnergyPLAN, which provides a handy GUI.
 When a scenario has been configured, experimental parameters are stored in a data file, which path is required to run the algorithm.
 The decision variables are a subset of the parameters in the input file and the algorithms will change only those values, leaving all the other parameters unchanged.
 
 ### :sparkles: Define a model
 
-Here the word model is used to indicate the problem to be optimized, which a user-defined model of reality.o
+Here the word model is used to indicate the problem to be optimized, which is an user-defined model of reality.
+Models are declared in the folder ``moea/models``.
+To create a new model, declare a new class that inherits from the ``BaseModel`` class in ``moea.models.base_model``.
+Each module (i.e., a file in the folder ``models``) can contain several models.
+A good practice is to group models in modules by similarity of the concepts that they are intended to model.
 
-### Define an algorithm (optional)
+When a new model is created, to make it available to the function ``get_model``, it must be added to the list of models in the ``__init__.py`` file of the ``models`` package.
+
+### Define an algorithm (optional) (work in progress)
 
 Custom algorithms can be defined by the user.
 
@@ -56,6 +62,8 @@ If you want to use one of the available algorithm, you can browse the list of av
 moea algorithms
 ```
 
+When a new algorithm is created, to make it available to the function ``get_algorithm``, it must be added to the list of models in the ``__init__.py`` file of the ``algorithms`` package.
+
 ### Run an MOEA algorithm
 
 If the Python environment was created without errors, the application ``moea`` should be accessible from the command line when the environment is active.
@@ -66,17 +74,22 @@ A minimal guide to the use of ``moea`` is available via
 moea --help
 ```
 
-and help for each of the command can be conculted using
+and help for each of the command can be consulted using
 
 ```bash
 moea COMMAND --help
 ```
 
-The ``run`` command requires two (mandatory) arguments, i.e., the name of the algorithm and the name of the model to be optimized.
+The ``run`` command requires three (mandatory) arguments
+
+1. the name of the algorithm, which must correspond to the name of the algorithm class,
+2. the name of the model to be optimized, which must correspond to the name of the model class, and
+3. the name of the file containing the parameters for a scenario (w/o the ``.txt`` extension does not matter).
+
 The syntax of the command is the following
 
 ```bash
-moea run ALGORITHM MODEL
+moea run ALGORITHM MODEL DATA_FILE_NAME
 ```
 
 which runs the algorithm with default parameters.
