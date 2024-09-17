@@ -1,24 +1,9 @@
-image: python:3.8-buster
-
-before_script:
-  - pip install -r docs/requirements.txt
-
-test:
-  stage: test
-  script:
-  - cd docs
-  - mkdocs build --strict --verbose --site-dir test
-  artifacts:
-    paths:
-    - test
-  rules:
-    - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
-
 pages:
   stage: deploy
+  image: python:latest
   script:
-  - cd docs
-  - mkdocs build --strict --verbose
+  - pip install mkdocs-material
+  - mkdocs build --site-dir public --docs_dir docs/docs --strict --verbose
   artifacts:
     paths:
     - public
