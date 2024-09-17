@@ -1,4 +1,4 @@
-name: manthova
+name: moea
 channels:
   - conda-forge
 dependencies:
