@@ -10,7 +10,7 @@ test:
   - mkdocs build --strict --verbose --site-dir test
   artifacts:
     paths:
-    - docs/test
+    - test
   rules:
     - if: $CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH
 
@@ -21,6 +21,6 @@ pages:
   - mkdocs build --strict --verbose
   artifacts:
     paths:
-    - docs/public
+    - public
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
