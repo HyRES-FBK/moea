@@ -1,0 +1,6 @@
+site_name: MOEA framework for energy planning
+#
+site_author: Michele Urbani (FBK)
+#
+theme:
+  name: readthedocs
