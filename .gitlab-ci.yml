@@ -2,7 +2,7 @@ pages:
   stage: deploy
   image: python:latest
   script:
-  - pip install mkdocs-material mkdocsstrings mkdocsstrings-python
+  - pip install mkdocs-material mkdocstrings mkdocstrings-python
   - cd docs
   - mkdocs build --site-dir ../public --strict --verbose
   artifacts:
