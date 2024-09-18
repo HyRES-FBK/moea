@@ -1,6 +1,6 @@
 site_name: MOEA framework for energy planning
-#
 site_author: Michele Urbani (FBK)
-#
+site_url: https://moea-hyres-manthova-27756fd0bc31e2b80342f831b767e46e0413086846e.pages.fbk.eu/
+repo_url: https://gitlab.fbk.eu/hyres/manthova/moea
 theme:
   name: readthedocs
