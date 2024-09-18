@@ -4,3 +4,11 @@ site_url: https://moea-hyres-manthova-27756fd0bc31e2b80342f831b767e46e0413086846
 repo_url: https://gitlab.fbk.eu/hyres/manthova/moea
 theme:
   name: readthedocs
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Usage: cli.md
+  - Examples: use-cases.md
+plugins:
+  - search
+  - mkdocstrings

@@ -15,8 +15,9 @@ dependencies:
   - notebook
   - numpy
   - pandas
+  - mkdocstrings
+  - mkdocstrings-pytho
   - pip:
     - python-dotenv
-    - mkdocs
     - pymoo
     - -e .
