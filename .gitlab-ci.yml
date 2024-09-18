@@ -3,6 +3,7 @@ pages:
   image: python:latest
   script:
   - pip install mkdocs-material mkdocstrings mkdocstrings-python
+  - pip install -e .
   - cd docs
   - mkdocs build --site-dir ../public --strict --verbose
   artifacts:
