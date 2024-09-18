@@ -23,6 +23,15 @@ class Manhub2016(BaseProblem):
 
         The reference input file is `Manhub2016.txt`, which is a modified
         version of the input file ``Denmark2030Reference.txt``.
+
+        Parameters:
+        -----------
+        - ``data_file``: str or Path
+
+            The path to the input file. This file is used as a template to
+            generate the input files for each individual.
+            The values will be replaced by the values of the decision variables
+            when generating the input files.
         """
         # Define the input variables. The variables chosen here are the same
         # as the ones used in EPLANopt https://github.com/matpri/EPLANopt.git
