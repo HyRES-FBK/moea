@@ -10,19 +10,29 @@ from moea.config import ENERGYPLAN_RESULTS
 
 
 class BaseProblem(Problem):
+    """
+    Declaration of the optimization problem. The input variables are
+    defined here, as well as the number of objectives and constraints.
+    EnergyPLAN allows the user to define more than a thousand variables,
+    depending on the model being used. The file
+    ``EnergyPLAN/spool/input.json`` is the template used to generate the
+    input files for the optimization. Only the variables that are being
+    declared here are modified in the input files.
+    The lower and upper bounds of the variables are also defined here.
+    The base problem is defined as a single objective problem with no
+    constraints.
+    """
 
     def __init__(self, data_file: Union[str, Path], **kwargs):
         """
-        Declaration of the optimization problem. The input variables are
-        defined here, as well as the number of objectives and constraints.
-        EnergyPLAN allows the user to define more than a thousand variables,
-        depending on the model being used. The file
-        ``EnergyPLAN/spool/input.json`` is the template used to generate the
-        input files for the optimization. Only the variables that are being
-        declared here are modified in the input files.
-        The lower and upper bounds of the variables are also defined here.
-        The base problem is defined as a single objective problem with no
-        constraints.
+        Parameters:
+        -----------
+        - ``data_file``: str or Path
+
+            The path to the input file. This file is used as a template to
+            generate the input files for each individual.
+            The values will be replaced by the values of the decision variables
+            when generating the input files.
         """
         # If data file is string convert to Path
         if type(data_file) is str:

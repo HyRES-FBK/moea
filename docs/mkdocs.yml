@@ -7,8 +7,9 @@ theme:
 nav:
   - Home: index.md
   - Installation: installation.md
-  - Usage: cli.md
+  - Usage: usage.md
   - Examples: use-cases.md
+  - Documentation: documentation.md
 plugins:
   - search
   - mkdocstrings

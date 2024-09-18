@@ -10,20 +10,21 @@ from moea.models.problem import BaseProblem
 
 
 class Manhub2016(BaseProblem):
+    """
+    This problem class replicates the model in
+
+    > Mahbub, M. S., Cozzini, M., Østergaard, P. A., Alberti, F. (2016). Combining multi-objective evolutionary algorithms and descriptive analytical modelling in energy scenario design. Applied Energy, 164, 140-151.
+
+    There are six decision variables, which are the capacities of power
+    plants, CHP, heat pump, onshore wind, offshore wind, and PV. The
+    objectives are the total CO2 emissions and the total annual costs.
+
+    The reference input file is `Manhub2016.txt`, which is a modified
+    version of the input file ``Denmark2030Reference.txt``.
+    """
 
     def __init__(self, data_file: Union[str, Path], **kwargs):
         """
-        This problem class replicates the model in
-
-        > Mahbub, M. S., Cozzini, M., Østergaard, P. A., Alberti, F. (2016). Combining multi-objective evolutionary algorithms and descriptive analytical modelling in energy scenario design. Applied Energy, 164, 140-151.
-
-        There are six decision variables, which are the capacities of power
-        plants, CHP, heat pump, onshore wind, offshore wind, and PV. The
-        objectives are the total CO2 emissions and the total annual costs.
-
-        The reference input file is `Manhub2016.txt`, which is a modified
-        version of the input file ``Denmark2030Reference.txt``.
-
         Parameters:
         -----------
         - ``data_file``: str or Path
