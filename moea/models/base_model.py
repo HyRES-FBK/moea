@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Dict, List
 from pathlib import Path
 
 from pymoo.core.problem import Problem
@@ -9,7 +9,7 @@ from moea.utils import dump_input, find_values, execute_energyplan_spool
 from moea.config import ENERGYPLAN_RESULTS
 
 
-class BaseProblem(Problem):
+class BaseModel(Problem):
     """
     Declaration of the optimization problem. The input variables are
     defined here, as well as the number of objectives and constraints.
@@ -23,16 +23,29 @@ class BaseProblem(Problem):
     constraints.
     """
 
-    def __init__(self, data_file: Union[str, Path], **kwargs):
+    def __init__(self,
+                 vars: Dict[str, Real],
+                 objectives: List[str],
+                 data_file: Union[str, Path],
+                 **kwargs):
         """
         Parameters:
         -----------
+        - ``vars``: dict
+
+            A dictionary containing variable names as keys and PyMOO type
+            objects as variables.
+
+        - ``objectives``: list
+            A list of strings containing the names of the objectives.
+
         - ``data_file``: str or Path
 
             The path to the input file. This file is used as a template to
             generate the input files for each individual.
             The values will be replaced by the values of the decision variables
             when generating the input files.
+
         """
         # If data file is string convert to Path
         if type(data_file) is str:
@@ -45,23 +58,19 @@ class BaseProblem(Problem):
             raise ValueError("Data file must be a text file.")
         self.data_file = data_file
 
-        # Define the input variables. The variables chosen here are the same
-        # as the ones used in EPLANopt https://github.com/matpri/EPLANopt.git
-        vars = {
-            'input_RES1_capacity':      Real(bounds=(17, 100)),
-            'input_cap_pp_el':          Real(bounds=(0, 1)),
-            'input_storage_pump_cap':   Real(bounds=(0, 75)),
-        }
-
-        self.objectives = [
-            "TOTAL ANNUAL COSTS",
-            "CO2-emission (total)"
-        ]
+        # Set objectives as attributes of the class
+        self.objectives = objectives
+        # If objectives is a string, convert it to a list
+        if type(objectives) is str:
+            self.objectives = [objectives]
+        # If objectives is not a list or is none, raise an error
+        if type(objectives) is not list or objectives is None:
+            raise ValueError("Objectives must be a list of strings.")
 
         # Initialize the parent class
         super().__init__(
             vars=vars,
-            n_obj=len(self.objectives),     # The problem has one objective
+            n_obj=len(self.objectives),
             **kwargs
         )
 
