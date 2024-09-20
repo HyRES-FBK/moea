@@ -16,7 +16,7 @@ dependencies:
   - numpy
   - pandas
   - mkdocstrings
-  - mkdocstrings-pytho
+  - mkdocstrings-python
   - pip:
     - python-dotenv
     - pymoo
