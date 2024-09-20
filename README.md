@@ -9,6 +9,8 @@ The repository for the MANTHOVA project.
 The framework proposed in this repository aims to simplify the interaction of users with
 EnergyPLAN through Python when developing optmization algorithms.
 
+For further details about the code, check the complete [documentation](https://moea-hyres-manthova-27756fd0bc31e2b80342f831b767e46e0413086846e.pages.fbk.eu/).
+
 ## :page_with_curl: Requirements
 
 The MOEA package works only in Windows because EnergyPLAN runs only in Windows.
