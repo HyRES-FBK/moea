@@ -1,4 +1,4 @@
-from moea.utils import clean_spool_folder, clean_results_folder
+from moea.utils import setup_spool_folder, setup_results_folder
 
 from pymoo.core.mixed import MixedVariableGA
 from pymoo.util.display.multi import MultiObjectiveOutput
@@ -20,6 +20,6 @@ class BaseAlgorithm(MixedVariableGA):
 
     def _setup(self, problem, **kwargs):
         # Clean the spool and results folders
-        clean_spool_folder()
-        clean_results_folder()
+        setup_spool_folder()
+        setup_results_folder()
         return super()._setup(problem, **kwargs)

@@ -237,18 +237,24 @@ def dump_input(input_dict: dict, i: int, data_file: Union[str, Path]) -> None:
             f.write(f"{k}=\n{v}\n")
 
 
-def clean_spool_folder() -> None:
+def setup_spool_folder() -> None:
     """
-    Clean the spool folder.
+    Check existence and clean the spool folder.
     """
+    # Check existence of the spool folder
+    ENERGYPLAN_SPOOL.mkdir(parents=True, exist_ok=True)
+    # Clean the spool folder
     for file in ENERGYPLAN_SPOOL.glob('*.txt'):
         file.unlink()
 
 
-def clean_results_folder() -> None:
+def setup_results_folder() -> None:
     """
-    Clean the results folder.
+    Check existence and clean the results folder.
     """
+    # Check existence of the results folder
+    ENERGYPLAN_RESULTS.mkdir(parents=True, exist_ok=True)
+    # Clean the results folder
     for file in ENERGYPLAN_RESULTS.glob('*.txt'):
         file.unlink()
 
