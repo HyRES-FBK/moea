@@ -37,12 +37,13 @@ class Manhub2016(BaseProblem):
         # Define the input variables. The variables chosen here are the same
         # as the ones used in EPLANopt https://github.com/matpri/EPLANopt.git
         vars = {
-            '':      Real(bounds=(0, 1000)),  # PP capacity
-            '':      Real(bounds=(0, 1000)),  # CHP capacity
-            '':      Real(bounds=(0, 1000)),  # Heat pump capacity
-            'input_RES1_capacity':      Real(bounds=(0, 1500)),  # Onshore wind
-            'input_RES2_capacity':      Real(bounds=(0, 1500)),  # Offshore wind
-            'input_RES3_capacity':      Real(bounds=(0, 1500)),  # PV capacity
+            'input_cap_chp3_el':     Real(bounds=(0, 1000)),  # CHP capacity
+            'input_cap_hp3_el':      Real(bounds=(0, 1000)),  # HP Heat pump capacity
+            'input_cap_pp_el':       Real(bounds=(0, 1000)),  # PP capacity
+            'input_RES1_capacity':   Real(bounds=(0, 1500)),  # Onshore wind
+            'input_RES2_capacity':   Real(bounds=(0, 1500)),  # Offshore wind
+            'input_RES3_capacity':   Real(bounds=(0, 1500)),  # PV capacity
+            'input_cap_boiler3_th':  Real(bounds=(0.0, 5.0)),  # Heat storage group 3
         }
 
         self.objectives = [
