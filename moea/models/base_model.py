@@ -90,7 +90,7 @@ class BaseModel(Problem):
         # Iterate over individuals and create an input file for each one
         # Dump the input vector to a file
         for i, ind in enumerate(x):
-            dump_input(ind, i, self.data_file)
+            dump_input(ind, i)
 
         # Call EnergyPLAN using spool mode; only the input files are needed
         execute_energyplan_spool([f"input{i}.txt" for i in range(len(x))])
