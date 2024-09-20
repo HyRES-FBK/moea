@@ -2,7 +2,7 @@
 
 ## The ``BaseProblem`` class
 
-::: moea.models.base_model.BaseProblem
+::: moea.models.base_model.BaseModel
 
 ## The ``BaseAlgorithm`` class
 
