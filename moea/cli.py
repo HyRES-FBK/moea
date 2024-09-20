@@ -1,5 +1,6 @@
 import re
 import typer
+import numpy as np
 from loguru import logger
 
 from pymoo.optimize import minimize
@@ -55,10 +56,18 @@ def run(
     algorithm = get_algorithm(algorithm, pop_size=pop_size)
 
     logger.info(f"Running {algorithm} on {model}.")
-    minimize(
+
+    res = minimize(
         problem=problem,
         algorithm=algorithm,
+        termination=('n_gen', 2),
         verbose=True
     )
 
     logger.info("Optimization finished.")
+
+    # Save the results
+    F = res.F
+    # Save the numpy array F to a csv file
+    np.savetxt('F.csv', F, delimiter=',')
+    logger.info("Results saved.")
