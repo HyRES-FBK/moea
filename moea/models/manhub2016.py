@@ -6,10 +6,10 @@ from pymoo.core.variable import Real
 
 from moea.utils import dump_input, find_values, execute_energyplan_spool
 from moea.config import ENERGYPLAN_RESULTS
-from moea.models.problem import BaseProblem
+from moea.models.base_model import BaseModel
 
 
-class Manhub2016(BaseProblem):
+class Manhub2016(BaseModel):
     """
     This problem class replicates the model in
 
@@ -23,7 +23,9 @@ class Manhub2016(BaseProblem):
     version of the input file ``Denmark2030Reference.txt``.
     """
 
-    def __init__(self, data_file: Union[str, Path], **kwargs):
+    def __init__(self,
+                 data_file: Union[str, Path] = "Aalborg2050_vision.txt",
+                 **kwargs):
         """
         Parameters:
         -----------
@@ -37,16 +39,15 @@ class Manhub2016(BaseProblem):
         # Define the input variables. The variables chosen here are the same
         # as the ones used in EPLANopt https://github.com/matpri/EPLANopt.git
         vars = {
-            'input_cap_chp3_el':     Real(bounds=(0, 1000)),  # CHP capacity
-            'input_cap_hp3_el':      Real(bounds=(0, 1000)),  # HP Heat pump capacity
-            'input_cap_pp_el':       Real(bounds=(0, 1000)),  # PP capacity
-            'input_RES1_capacity':   Real(bounds=(0, 1500)),  # Onshore wind
-            'input_RES2_capacity':   Real(bounds=(0, 1500)),  # Offshore wind
-            'input_RES3_capacity':   Real(bounds=(0, 1500)),  # PV capacity
-            'input_cap_boiler3_th':  Real(bounds=(0.0, 5.0)),  # Heat storage group 3
+            'input_cap_chp3_el': Real(bounds=(0, 1000)),  # CHP capacity
+            'input_cap_hp3_el': Real(bounds=(0, 1000)),  # HP capacity
+            'input_cap_pp_el': Real(bounds=(0, 1000)),  # PP capacity
+            'input_RES1_capacity': Real(bounds=(0, 1500)),  # Onshore wind
+            'input_RES2_capacity': Real(bounds=(0, 1500)),  # Offshore wind
+            'input_RES3_capacity': Real(bounds=(0, 1500)),  # PV capacity
         }
 
-        self.objectives = [
+        objectives = [
             "CO2-emission (total)",
             "TOTAL ANNUAL COSTS",
         ]
@@ -54,7 +55,8 @@ class Manhub2016(BaseProblem):
         # Initialize the parent class
         super().__init__(
             vars=vars,
-            n_obj=len(self.objectives),     # The problem has one objective
+            objectives=objectives,
+            data_file=data_file,
             **kwargs
         )
 

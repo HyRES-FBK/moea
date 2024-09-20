@@ -1,10 +1,10 @@
 def get_model(name, *args, **kwargs):
     name = name.lower()
 
-    from moea.models.base_model import BaseProblem
+    from moea.models.manhub2016 import Manhub2016
 
     PROBLEM = {
-        'base_model': BaseProblem,
+        'manhub2016': Manhub2016,
     }
 
     if name not in PROBLEM:
