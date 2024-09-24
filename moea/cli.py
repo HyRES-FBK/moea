@@ -40,6 +40,7 @@ def run(
     model: str = typer.Argument(default="", help="The model to be optimized."),
     data_file: str = typer.Argument(default="", help="The data file to be used, which must be stored in EnergyPLAN Data folder."),
     pop_size: int = typer.Option(default=25, help="The population size."),
+    n_gen: int = typer.Option(default=100, help="The number of generations used as stopping criterion.")
 ):
     """
     Run the optimization algorithm.
@@ -60,7 +61,7 @@ def run(
     res = minimize(
         problem=problem,
         algorithm=algorithm,
-        termination=('n_gen', 2),
+        termination=('n_gen', n_gen),
         verbose=True
     )
 
