@@ -1,12 +1,8 @@
-from typing import Union, Dict, List
+from typing import Union, Dict
 from pathlib import Path
 
 from pymoo.core.problem import Problem
 from pymoo.core.variable import Real
-
-
-from moea.utils import dump_input, find_values, execute_energyplan_spool
-from moea.config import ENERGYPLAN_RESULTS
 
 
 class BaseModel(Problem):
@@ -25,7 +21,6 @@ class BaseModel(Problem):
 
     def __init__(self,
                  vars: Dict[str, Real],
-                 objectives: List[str],
                  data_file: Union[str, Path],
                  **kwargs):
         """
@@ -35,9 +30,6 @@ class BaseModel(Problem):
 
             A dictionary containing variable names as keys and PyMOO type
             objects as variables.
-
-        - ``objectives``: list
-            A list of strings containing the names of the objectives.
 
         - ``data_file``: str or Path
 
@@ -58,22 +50,13 @@ class BaseModel(Problem):
             raise ValueError("Data file must be a text file.")
         self.data_file = data_file
 
-        # Set objectives as attributes of the class
-        self.objectives = objectives
-        # If objectives is a string, convert it to a list
-        if type(objectives) is str:
-            self.objectives = [objectives]
-        # If objectives is not a list or is none, raise an error
-        if type(objectives) is not list or objectives is None:
-            raise ValueError("Objectives must be a list of strings.")
-
         # Initialize the parent class
         super().__init__(
             vars=vars,
-            n_obj=len(self.objectives),
             **kwargs
         )
 
+    
     def _evaluate(self, x, out, *args, **kwargs):
         """
         This function defines the evaluation of the problem. That is, the
@@ -81,26 +64,9 @@ class BaseModel(Problem):
         function evaluation consists of a call to EnergyPLAN. Since the problem
         is unconstrained, the constraints are not evaluated.
 
-        When defining a new problem, the user should NOT modify this function
-        but should modify only the ``__init__`` function to define variables
-        and objectives. The only exception is if the user wants to define a
-        new problem with constraints, in which case the constraints should be
-        evaluated in this function and stored in ``out[G]``.
         """
-        # Iterate over individuals and create an input file for each one
-        # Dump the input vector to a file
-        for i, ind in enumerate(x):
-            dump_input(ind, i)
+        return super()._evaluate(x, out, *args, **kwargs)
 
-        # Call EnergyPLAN using spool mode; only the input files are needed
-        execute_energyplan_spool([f"input{i}.txt" for i in range(len(x))])
 
-        # Parse the output file and store the objective function value in an
-        # array
-        out["F"] = find_values(
-            ENERGYPLAN_RESULTS,
-            *self.objectives
-        )
-        # Store the constraint violation in the output dictionary. This is not
-        # used in this problem, but it is included for completeness.
-        # out["G"] = 0
+if __name__ == "__main__":
+    pass
