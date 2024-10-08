@@ -24,12 +24,11 @@ class Manhub2016(BaseModel):
     plants, CHP, heat pump, onshore wind, offshore wind, and PV. The
     objectives are the total CO2 emissions and the total annual costs.
 
-    The reference input file is `Manhub2016.txt`, which is a modified
-    version of the input file ``Denmark2030Reference.txt``.
+    The reference input file is ``Aalborg2050_2objctives.txt``.
     """
 
     def __init__(self,
-                 data_file: Union[str, Path] = "Aalborg2050_vision.txt",
+                 data_file: Union[str, Path] = "Aalborg2050_2objectives.txt",
                  **kwargs):
         """
         Parameters:
@@ -41,26 +40,22 @@ class Manhub2016(BaseModel):
             The values will be replaced by the values of the decision variables
             when generating the input files.
         """
-        # Define the input variables. The variables chosen here are the same
-        # as the ones used in EPLANopt https://github.com/matpri/EPLANopt.git
+        # Define the input variables.
         vars = {
-            'input_cap_chp3_el': Real(bounds=(0, 1000)),  # CHP capacity
-            'input_cap_hp3_el': Real(bounds=(0, 1000)),  # HP capacity
+            'input_cap_chp3_el': Real(bounds=(0, 1000)),  # CHP group 3 capacity
+            'input_cap_hp3_el': Real(bounds=(0, 1000)),  # HP group 3 capacity
             'input_cap_pp_el': Real(bounds=(0, 1000)),  # PP capacity
             'input_RES1_capacity': Real(bounds=(0, 1500)),  # Onshore wind
             'input_RES2_capacity': Real(bounds=(0, 1500)),  # Offshore wind
             'input_RES3_capacity': Real(bounds=(0, 1500)),  # PV capacity
+            # 'input_cap_boiler3_th': Real(bounds=(0, 10000)),  # Boiler group 3 capacity
         }
-
-        objectives = [
-            "CO2-emission (total)",
-            "TOTAL ANNUAL COSTS",
-        ]
 
         # Initialize the parent class
         super().__init__(
             vars=vars,
-            objectives=objectives,
+            n_ieq_constr=3,
+            n_obj=2,
             data_file=data_file,
             **kwargs
         )
@@ -72,11 +67,6 @@ class Manhub2016(BaseModel):
         function evaluation consists of a call to EnergyPLAN. Since the problem
         is unconstrained, the constraints are not evaluated.
 
-        When defining a new problem, the user should NOT modify this function
-        but should modify only the ``__init__`` function to define variables
-        and objectives. The only exception is if the user wants to define a
-        new problem with constraints, in which case the constraints should be
-        evaluated in this function and stored in ``out[G]``.
         """
         # Iterate over individuals and create an input file for each one
         # Dump the input vector to a file
@@ -90,7 +80,8 @@ class Manhub2016(BaseModel):
         # array
         out["F"] = find_values(
             ENERGYPLAN_RESULTS,
-            *self.objectives
+            "CO2-emission (corrected)",
+            "TOTAL ANNUAL COSTS",
         )
 
         # CONSTRAINTS
@@ -99,28 +90,23 @@ class Manhub2016(BaseModel):
 
         # Read and store the values of interest into arrays
         import_elec = []
-        heat_prod, heat_demand = [], []
+        heat = []
         stable_load = []
-        for out in ENERGYPLAN_RESULTS.glob(".txt"):
+        for res in ENERGYPLAN_RESULTS.glob("*.txt"):
             # Parse the output file
-            D = parse_output(out)
+            D = parse_output(res)
             # Results are organized as dictionary, one for each section, and
             # each value is a pandas DataFrame
             montly_lbl = 'MONTHLY AVERAGE VALUES (MW)'
             # Retrieve import
             import_elec.append(
-                D[montly_lbl]['Import Electr.']['Annual Maximum'] \
-                    .astype(float))
+                float(D[montly_lbl]['Import Electr.']['Annual Maximum']))
             # Retrieve Balance3 heat
-            heat_prod.append(
-                D['TOTAL FOR ONE YEAR (TWh/year)']['Balance3  heat'] \
-                    .astype(float))
-            # Retrieve heat demand
-            heat_demand.append(
-                D[montly_lbl]['DH Demand'].astype(float).sum())
+            heat.append(
+                float(D['TOTAL FOR ONE YEAR (TWh/year)']['Balance3  Heat']))
             # Retrieve stabilized load percentage
             stable_load.append(
-                D[montly_lbl]['Stabil. Load']['Annual Minimum'].astype(float))
+                float(D[montly_lbl]['Stabil. Load']['Annual Minimum']))
 
         # Transmission line capacity of export/import: 160 MW. This constraint
         # enforces the system to produce enough electricity so that it does not
@@ -129,19 +115,20 @@ class Manhub2016(BaseModel):
 
         # Heat balance. This constraint enforces the system to produce exactly
         # the amount of heat necessary to meet the heat demand.
-        heat = np.array(heat_demand) - np.array(heat_prod)
+        heat = np.array(heat)
 
         # Grid stabilization: More than 30% of power production in all hours
         # must come from units able to supply grid support (see [77] for
         # details on grid stability in EnergyPLAN).
         # This constraint is already taken into account by EnergyPLAN
-        stable_load = 0.3 - np.array(stable_load) / 100
+        stable_load = 100 - np.array(stable_load)
 
-        out["G"] = np.concatenate([
+        out["G"] = np.column_stack([
             import_constr,
             stable_load,
-        ])
-
-        out["H"] = np.array([
             heat,
         ])
+
+
+if __name__ == "__main__":
+    pass
