@@ -50,7 +50,7 @@ def parse_output(output_file: Union[str, Path]) -> dict:
     they are stored in the dictionary as pandas Series or DataFrames.
     """
 
-    with open(output_file, 'r') as f:
+    with open(output_file, 'r', encoding='latin-1') as f:
         rows = f.readlines()
 
     output = {}
@@ -192,7 +192,16 @@ def find_values(results_folder: Union[str, Path], *keys: str) -> np.ndarray:
     return np.vstack(values)
 
 
-def dump_input(input_dict: dict, i: int) -> None:
+def clean_results_folder() -> None:
+    """
+    Clean the results folder.
+    """
+    for file in ENERGYPLAN_RESULTS.glob('*.txt'):
+        file.unlink()
+
+
+def dump_input(input_dict: dict, i: int,
+               destination: Union[str, Path] = ENERGYPLAN_SPOOL) -> None:
     """
     Dump the input vector to a file using EnergyPLAN syntax.
 
@@ -205,13 +214,23 @@ def dump_input(input_dict: dict, i: int) -> None:
     ``i`` : int
 
         An id for the input file to be dumped.
-        problem to be solved.
+
+    ``destination`` : str or Path
+    
+        The folder where the input file will be saved.
 
     """
+    # Check if the destination is a Path object
+    if not isinstance(destination, Path):
+        destination = Path(destination)
     # Dump input file
-    with open(ENERGYPLAN_SPOOL / f"input{i}.txt", 'w') as f:
+    with open(destination / f"input{i}.txt", 'w') as f:
+        # Write header with EnergyPLAN version
+        f.write("EnergyPLAN version\n698\n")
         for k, v in input_dict.items():
             f.write(f"{k}=\n{v}\n")
+    # Clean the results folder
+    clean_results_folder()
 
 
 def setup_spool_folder() -> None:
