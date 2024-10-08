@@ -48,7 +48,7 @@ class Manhub2016(BaseModel):
             'input_RES1_capacity': Real(bounds=(0, 1500)),  # Onshore wind
             'input_RES2_capacity': Real(bounds=(0, 1500)),  # Offshore wind
             'input_RES3_capacity': Real(bounds=(0, 1500)),  # PV capacity
-            # 'input_cap_boiler3_th': Real(bounds=(0, 10000)),  # Boiler group 3 capacity
+            'input_cap_boiler3_th': Real(bounds=(0, 10000)),  # boiler capacity
         }
 
         # Initialize the parent class
@@ -70,6 +70,25 @@ class Manhub2016(BaseModel):
         """
         # Iterate over individuals and create an input file for each one
         # Dump the input vector to a file
+        keys_to_exclude = ['input_cap_boiler3_th', 'input_cap_pp_el']
+        for i, ind in enumerate(x):
+            dump_input({k: v for k, v in ind.items()
+                        if k not in keys_to_exclude}, i)
+
+        # Call EnergyPLAN using spool mode; only the input files are needed
+        execute_energyplan_spool([f"input{i}.txt" for i in range(len(x))])
+
+        # The label for the monthly values
+        montly_lbl = 'MONTHLY AVERAGE VALUES (MW)'
+        # Retrieve values for boiler heat and PP capacity
+        for i, res in enumerate(ENERGYPLAN_RESULTS.glob("*.txt")):
+            D = parse_output(res)
+            x[i]['input_cap_boiler_3_th'] = \
+                np.float64(D[montly_lbl]['Boiler 3  Heat']['Annual Maximum'])
+            x[i]['input_cap_pp_el'] = \
+                np.float64(D[montly_lbl]['PP Electr.']['Annual Maximum'])
+
+        # Dump the full list of variables to a file
         for i, ind in enumerate(x):
             dump_input(ind, i)
 
@@ -89,15 +108,12 @@ class Manhub2016(BaseModel):
         # of the constraints and store the values in out["G"].
 
         # Read and store the values of interest into arrays
-        import_elec = []
-        heat = []
-        stable_load = []
+        import_elec, heat, stable_load = [], [], []
         for res in ENERGYPLAN_RESULTS.glob("*.txt"):
             # Parse the output file
             D = parse_output(res)
             # Results are organized as dictionary, one for each section, and
             # each value is a pandas DataFrame
-            montly_lbl = 'MONTHLY AVERAGE VALUES (MW)'
             # Retrieve import
             import_elec.append(
                 float(D[montly_lbl]['Import Electr.']['Annual Maximum']))
