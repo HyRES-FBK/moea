@@ -72,3 +72,7 @@ def run(
     # Save the numpy array F to a csv file
     np.savetxt('F.csv', F, delimiter=',')
     logger.info("Results saved.")
+
+
+if __name__ == "__main__":
+    app()
