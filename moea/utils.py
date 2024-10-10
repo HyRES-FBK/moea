@@ -158,6 +158,20 @@ def parse_output(output_file: Union[str, Path]) -> dict:
     return output
 
 
+def parse_input(input_file: Union[str, Path]) -> dict:
+    """
+    Parse the input file of EnergyPLAN and return the data in a dictionary.
+    """
+    with open(input_file, 'r', encoding='utf-16') as f:
+        rows = f.readlines()
+    data = {}
+    for i in range(0, len(rows), 2):
+        if rows[i] == 'xxx':
+            break
+        data[rows[i].strip().replace('=', '')] = rows[i + 1].strip()
+    return data
+
+
 @lru_cache(maxsize=None)
 def find_position(file_path: Union[str, Path], key: str) -> Tuple[int, int]:
     """
