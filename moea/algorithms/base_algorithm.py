@@ -1,6 +1,5 @@
 from moea.utils import setup_spool_folder, setup_results_folder
 
-from pymoo.core.mixed import MixedVariableGA
 from pymoo.algorithms.moo.nsga2 import NSGA2
 
 
