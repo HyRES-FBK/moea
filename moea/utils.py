@@ -214,7 +214,7 @@ def clean_results_folder() -> None:
         file.unlink()
 
 
-def dump_input(input_dict: dict, i: int,
+def dump_input(input_dict: dict, i: int, data: dict,
                destination: Union[str, Path] = ENERGYPLAN_SPOOL) -> None:
     """
     Dump the input vector to a file using EnergyPLAN syntax.
@@ -237,11 +237,16 @@ def dump_input(input_dict: dict, i: int,
     # Check if the destination is a Path object
     if not isinstance(destination, Path):
         destination = Path(destination)
+    # Substitute the values in the data dictionary
+    for k, v in input_dict.items():
+        data[k] = v
     # Dump input file
     with open(destination / f"input{i}.txt", 'w') as f:
         # Write header with EnergyPLAN version
         f.write("EnergyPLAN version\n698\n")
-        for k, v in input_dict.items():
+        for k, v in data.items():
+            if k == 'EnergyPLAN version':
+                continue
             f.write(f"{k}=\n{v}\n")
     # Clean the results folder
     clean_results_folder()
