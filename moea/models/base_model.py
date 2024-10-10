@@ -41,7 +41,13 @@ class BaseModel(Problem):
         # Check that the data file name ends with .txt
         if data_file.suffix != ".txt":
             raise ValueError("Data file must be a text file.")
-        self.data_file = data_file
+        # Provide full path for the data file
+        data_file = ENERGYPLAN_DATA_DIR / data_file
+        # Check that the data file exists
+        if not data_file.exists():
+            raise FileNotFoundError(f"Data file {data_file} not found.")
+        # Read data file and store values
+        self.default_data = parse_input(data_file)
 
         # Initialize the parent class
         super().__init__(**kwargs)

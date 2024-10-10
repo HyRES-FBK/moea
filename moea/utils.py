@@ -3,7 +3,9 @@ import numpy as np
 import pandas as pd
 from typing import Union, List, Tuple
 from pathlib import Path
-from moea.config import ENERGYPLAN_EXE, ENERGYPLAN_SPOOL, ENERGYPLAN_RESULTS
+from moea.config import (ENERGYPLAN_EXE, ENERGYPLAN_SPOOL, ENERGYPLAN_RESULTS,
+                         ENERGYPLAN_DATA_DIR)
+
 from functools import lru_cache
 
 """
