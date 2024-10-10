@@ -21,8 +21,10 @@ class Manhub2016(BaseModel):
     > 164, 140-151.
 
     There are six decision variables, which are the capacities of power
-    plants, CHP, heat pump, onshore wind, offshore wind, and PV. The
-    objectives are the total CO2 emissions and the total annual costs.
+    plants, CHP, heat pump, onshore wind, offshore wind, and PV, and one free
+    variable, that is the capacity of group 3 boiler, which does not have an
+    effect on the value of the objectives. The objectives are the total CO2
+    emissions and the total annual costs.
 
     The reference input file is ``Aalborg2050_2objctives.txt``.
     """
@@ -136,7 +138,9 @@ class Manhub2016(BaseModel):
         # Grid stabilization: More than 30% of power production in all hours
         # must come from units able to supply grid support (see [77] for
         # details on grid stability in EnergyPLAN).
-        # This constraint is already taken into account by EnergyPLAN
+        # This constraint is already taken into account by EnergyPLAN so we
+        # just need to subtract the value from 100 to have a constraint that
+        # is satisfied when the value is positive.
         stable_load = 100 - np.array(stable_load)
 
         out["G"] = np.column_stack([
