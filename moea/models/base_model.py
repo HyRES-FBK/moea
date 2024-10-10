@@ -3,6 +3,9 @@ from pathlib import Path
 
 from pymoo.core.problem import Problem
 
+from moea.utils import parse_input
+from moea.config import ENERGYPLAN_DATA_DIR
+
 
 class BaseModel(Problem):
     """

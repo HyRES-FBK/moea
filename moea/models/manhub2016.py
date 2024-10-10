@@ -73,22 +73,22 @@ class Manhub2016(BaseModel):
         is unconstrained, the constraints are not evaluated.
 
         """
-        # For ease of reference, we define the indices of the variables
-        PP = 2
-        BOILER = 6
-
         # Iterate over individuals and create an input file for each one
         # Dump the input vector to a file
         keys_to_exclude = ['input_cap_boiler3_th', 'input_cap_pp_el']
         for i, ind in enumerate(x):
+            # Overwrite the values in self.data with the values in ind
             dump_input({k: ind[j] for j, k in enumerate(self.vars.index)
-                        if k not in keys_to_exclude}, i)
+                        if k not in keys_to_exclude}, i, self.default_data)
 
         # Call EnergyPLAN using spool mode; only the input files are needed
         execute_energyplan_spool([f"input{i}.txt" for i in range(len(x))])
 
         # The label for the monthly values
         montly_lbl = 'MONTHLY AVERAGE VALUES (MW)'
+        # For ease of reference, we define the indices of the variables
+        PP = 2
+        BOILER = 6
         # Retrieve values for boiler heat and PP capacity
         for i, res in enumerate(ENERGYPLAN_RESULTS.glob("*.txt")):
             D = parse_output(res)
@@ -99,7 +99,8 @@ class Manhub2016(BaseModel):
 
         # Dump the full list of variables to a file
         for i, ind in enumerate(x):
-            dump_input({k: ind[j] for j, k in enumerate(self.vars.index)}, i)
+            dump_input({k: ind[j] for j, k in enumerate(self.vars.index)}, i,
+            self.default_data)
 
         # Call EnergyPLAN using spool mode; only the input files are needed
         execute_energyplan_spool([f"input{i}.txt" for i in range(len(x))])
