@@ -1,8 +1,7 @@
-from typing import Union, Dict
+from typing import Union
 from pathlib import Path
 
 from pymoo.core.problem import Problem
-from pymoo.core.variable import Real
 
 
 class BaseModel(Problem):
@@ -20,17 +19,11 @@ class BaseModel(Problem):
     """
 
     def __init__(self,
-                 vars: Dict[str, Real],
                  data_file: Union[str, Path],
                  **kwargs):
         """
         Parameters:
         -----------
-        - ``vars``: dict
-
-            A dictionary containing variable names as keys and PyMOO type
-            objects as variables.
-
         - ``data_file``: str or Path
 
             The path to the input file. This file is used as a template to
@@ -51,10 +44,7 @@ class BaseModel(Problem):
         self.data_file = data_file
 
         # Initialize the parent class
-        super().__init__(
-            vars=vars,
-            **kwargs
-        )
+        super().__init__(**kwargs)
 
     
     def _evaluate(self, x, out, *args, **kwargs):

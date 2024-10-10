@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from typing import Union
 from pathlib import Path
 
@@ -43,21 +44,23 @@ class Manhub2016(BaseModel):
             when generating the input files.
         """
         # Define the input variables.
-        vars = {
-            'input_cap_chp3_el': Real(bounds=(0, 1000)),  # CHP group 3 capacity
-            'input_cap_hp3_el': Real(bounds=(0, 1000)),  # HP group 3 capacity
-            'input_cap_pp_el': Real(bounds=(0, 1000)),  # PP capacity
-            'input_RES1_capacity': Real(bounds=(0, 1500)),  # Onshore wind
-            'input_RES2_capacity': Real(bounds=(0, 1500)),  # Offshore wind
-            'input_RES3_capacity': Real(bounds=(0, 1500)),  # PV capacity
-            'input_cap_boiler3_th': Real(bounds=(0, 10000)),  # boiler capacity
-        }
+        self.vars = pd.DataFrame.from_dict({
+            'input_cap_chp3_el': {'lb':0, 'ub': 1000},
+            'input_cap_hp3_el': {'lb':0, 'ub': 1000},
+            'input_cap_pp_el': {'lb': 0, 'ub': 1000},
+            'input_RES1_capacity': {'lb': 0, 'ub': 1500},
+            'input_RES2_capacity': {'lb': 0, 'ub': 1500},
+            'input_RES3_capacity': {'lb': 0, 'ub': 1500},
+            'input_cap_boiler3_th': {'lb': 0, 'ub': 10000},
+        }, dtype=float, orient='index')
 
         # Initialize the parent class
         super().__init__(
-            vars=vars,
+            n_var=len(self.vars),
             n_ieq_constr=3,
             n_obj=2,
+            xl=self.vars['lb'].values,
+            xu=self.vars['ub'].values,
             data_file=data_file,
             **kwargs
         )
@@ -70,11 +73,15 @@ class Manhub2016(BaseModel):
         is unconstrained, the constraints are not evaluated.
 
         """
+        # For ease of reference, we define the indices of the variables
+        PP = 2
+        BOILER = 6
+
         # Iterate over individuals and create an input file for each one
         # Dump the input vector to a file
         keys_to_exclude = ['input_cap_boiler3_th', 'input_cap_pp_el']
         for i, ind in enumerate(x):
-            dump_input({k: v for k, v in ind.items()
+            dump_input({k: ind[j] for j, k in enumerate(self.vars.index)
                         if k not in keys_to_exclude}, i)
 
         # Call EnergyPLAN using spool mode; only the input files are needed
@@ -85,14 +92,14 @@ class Manhub2016(BaseModel):
         # Retrieve values for boiler heat and PP capacity
         for i, res in enumerate(ENERGYPLAN_RESULTS.glob("*.txt")):
             D = parse_output(res)
-            x[i]['input_cap_boiler_3_th'] = \
+            x[i, BOILER] = \
                 np.float64(D[montly_lbl]['Boiler 3  Heat']['Annual Maximum'])
-            x[i]['input_cap_pp_el'] = \
+            x[i, PP] = \
                 np.float64(D[montly_lbl]['PP Electr.']['Annual Maximum'])
 
         # Dump the full list of variables to a file
         for i, ind in enumerate(x):
-            dump_input(ind, i)
+            dump_input({k: ind[j] for j, k in enumerate(self.vars.index)}, i)
 
         # Call EnergyPLAN using spool mode; only the input files are needed
         execute_energyplan_spool([f"input{i}.txt" for i in range(len(x))])
