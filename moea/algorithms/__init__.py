@@ -5,6 +5,9 @@ def get_algorithm(name, *args, **kwargs):
 
     ALGORITHM = {
         'base_algorithm': BaseAlgorithm,
+        'nsga2': BaseAlgorithm,
+        'nsgaii': BaseAlgorithm,
+        'nsga-ii': BaseAlgorithm,
     }
 
     if name not in ALGORITHM:
