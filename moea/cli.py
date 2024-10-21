@@ -1,6 +1,6 @@
 import re
 import typer
-import numpy as np
+import pickle
 from loguru import logger
 
 from pymoo.optimize import minimize
@@ -68,9 +68,9 @@ def run(
     logger.info("Optimization finished.")
 
     # Save the results
-    F = res.F
-    # Save the numpy array F to a csv file
-    np.savetxt('F.csv', F, delimiter=',')
+    with open(f"results_{model}_{algorithm}.pkl", "wb") as f:
+        pickle.dump(res, f)
+
     logger.info("Results saved.")
 
 
