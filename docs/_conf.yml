@@ -1,0 +1,17 @@
+# In _config.yml
+title: Multi-objecive evolutionary algorithms for energy system optimization
+author: Michele Urbani
+copyright: 2024, Sustanable Energy Center, Fondazione Bruno Kessler
+logo: fbk-logo.png
+execute:
+  execute_notebooks: force
+
+#######################################################################################
+# Execution settings
+execute:
+  execute_notebooks: off  # Whether to execute notebooks at build time. Must be one of ("auto", "force", "cache", "off")
+#######################################################################################
+
+# Add a bibtex file so that we can create citations
+bibtex_bibfiles:
+  - references.bib

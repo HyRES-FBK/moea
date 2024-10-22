@@ -1,5 +1,5 @@
 
-## :movie_camera: Scenario generation
+# MOEA Usage
 
 Setup of an experiment is carried out in EnergyPLAN, which provides a handy GUI.
 When a scenario has been configured, experimental parameters are stored in a data file, which path is required to run the algorithm.

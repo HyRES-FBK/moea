@@ -1,0 +1,13 @@
+# In _toc.yml
+format: jb-book
+root: index.md
+parts:
+- caption: Documentation
+  chapters:
+  - file: contents/getting-started.md
+  - file: contents/usage.md
+  - file: contents/documentation.md
+- caption: Reference cases
+  chapters:
+  - file: use-cases/aalborg.ipynb
+  # - file: use-cases/giudicarie.ipynb
