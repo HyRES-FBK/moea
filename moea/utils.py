@@ -243,7 +243,7 @@ def dump_input(input_dict: dict, i: int, data: dict,
     for k, v in input_dict.items():
         data[k] = v
     # Dump input file
-    with open(destination / f"input{i}.txt", 'w') as f:
+    with open(destination / f"input{i}.txt", 'w', encoding='utf-16') as f:
         # Write header with EnergyPLAN version
         f.write("EnergyPLAN version\n698\n")
         for k, v in data.items():
