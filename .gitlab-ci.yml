@@ -5,7 +5,7 @@ pages:
   - pip install -r docs/requirements.txt
   - pip install -e .
   - jupyter-book build docs/ --path-output build --builder html -v --config docs/_conf.yml
-  - mkdir public && cp build/_build/html/* public
+  - mkdir public && cp -r build/_build/html/* public
   artifacts:
     paths:
     - public
