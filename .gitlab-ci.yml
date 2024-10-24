@@ -7,6 +7,6 @@ pages:
   - jupyter-book build docs/ --path-output ../public --builder html -v --config docs/_conf.yml
   artifacts:
     paths:
-    - public
+    - public/_build/html
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
