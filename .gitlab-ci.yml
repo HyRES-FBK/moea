@@ -4,7 +4,6 @@ pages:
   script:
   - pip install -r docs/requirements.txt
   - pip install -e .
-  - mkdocs build --site-dir ../public --strict --verbose
   - jupyter-book biuld docs/ --path-output ../public --builder html -v --config docs/_conf.yml
   artifacts:
     paths:
