@@ -10,4 +10,4 @@ parts:
 - caption: Reference cases
   chapters:
   - file: use-cases/aalborg.ipynb
-  # - file: use-cases/giudicarie.ipynb
+  - file: use-cases/giudicarie.ipynb
