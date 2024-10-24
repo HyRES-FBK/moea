@@ -2,10 +2,10 @@ pages:
   stage: deploy
   image: python:latest
   script:
-  - pip install mkdocs-material mkdocstrings mkdocstrings-python
+  - pip install -r docs/requirements.txt
   - pip install -e .
-  - cd docs
   - mkdocs build --site-dir ../public --strict --verbose
+  - jupyter-book biuld docs/ --path-output ../public --builder html -v --config docs/_conf.yml
   artifacts:
     paths:
     - public
