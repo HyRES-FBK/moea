@@ -90,7 +90,7 @@ class GiudicarieEsteriori(BaseModel):
         > the case of Giudicarie Esteriori. *Energy* 116, 236-249.
 
         """
-        
+
         self.vars = pd.DataFrame.from_dict({
             "PVCapacity": {"lb": 5000, "ub": 42000},        # PV capacity
             "oilBoilerPercentage": {"lb": 0, "ub": 1},      # Oil boiler heat %
@@ -99,7 +99,7 @@ class GiudicarieEsteriori(BaseModel):
             "biomassCHP": {"lb": 0, "ub": 1},               # Biomass micro-CHP heat %
             "electricCarPercentage": {"lb": 0, "ub": 1},    # Electric car %
         }, dtype=float, orient='index')
-        
+
         super().__init__(
             n_var=len(self.vars),
             n_obj=4,
@@ -145,7 +145,7 @@ class GiudicarieEsteriori(BaseModel):
                 (reducedNumberOfDieselCars * self.averageKMPerYearForDieselCar)
         elecCarElectricityDemandInGWh = elecCarRunKM * \
             self.KWhPerKMElecCar / 1e6
-        
+
         oilBoilerDemand = self.totalHeatDemand * percentages[OIL] / \
             self.oilBoilerEfficiency
         LPGBoilerDemand = self.totalHeatDemand * percentages[LPG] / \
@@ -224,7 +224,7 @@ class GiudicarieEsteriori(BaseModel):
 
         # The meaning of HP changed, use directly the index 4
         capacityOfHeatPump = (
-            (self.maxHeatDemandInDistribution * percentages[4] * 
+            (self.maxHeatDemandInDistribution * percentages[4] *
              self.totalHeatDemand * 1e6) / \
                 (self.COP * self.sumOfAllHeatDistributions)).astype(int)
 
@@ -270,7 +270,7 @@ class GiudicarieEsteriori(BaseModel):
         # Since LPG has been overwritten, we use directly the index 1 for LPG
         newCapacityLPGBoiler = ((self.totalHeatDemand * percentages[1]) * \
             1e6 * 1.5 / self.sumOfAllHeatDistributions).astype(int)
-        
+
         investmentCostReductionLPGBoiler = np.where(
             newCapacityLPGBoiler > self.currentIndvLPGBoilerCapacity,
             (self.currentIndvLPGBoilerCapacity * \
@@ -308,7 +308,7 @@ class GiudicarieEsteriori(BaseModel):
         totalInvestmentCostForElectricCars = totalNumberOfELectricCars * \
             self.costOfElectricCarInKeuro * self.interest / \
                 (1 - (1 + self.interest) ** -self.electricCarLifeTime)
-        
+
         totalFixOperationalAndInvestmentCostForElectricCars = \
             totalNumberOfELectricCars * self.costOfElectricCarInKeuro * \
                 self.electricCarOperationalAndMaintanenceCost
@@ -321,7 +321,7 @@ class GiudicarieEsteriori(BaseModel):
 
         # Load followint capacity
         LFS = (z[IMPORT] + z[EXPORT]) / (z[DEMAND] + z[FLEXI] + z[HP])
-        
+
         totalPEForElectricity = z[PV] * self.PVPEF + z[HYDRO] * self.HYPEF + \
             z[WAVE] * self.BioGasPEF + z[BIOMASS] * self.BiomassPEF
 
