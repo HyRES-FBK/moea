@@ -11,7 +11,7 @@ from moea.config import ENERGYPLAN_RESULTS
 
 class GiudicarieEsteriori(BaseModel):
 
-    # Investment costs in kEuro 
+    # Investment costs in kEuro
     PVInvestmentCostInKEuro = 2.6
     hydroInvestmentCostInKEuro = 1.9
     individualBoilerInvestmentCostInKEuro = 0.588

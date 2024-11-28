@@ -35,6 +35,9 @@ class BaseModel(Problem):
             when generating the input files.
 
         """
+        # Check if data file exists
+        if not data_file:
+            raise ValueError("Data file must be provided.")
         # If data file is string convert to Path
         if type(data_file) is str:
             data_file = Path(data_file)
@@ -55,7 +58,7 @@ class BaseModel(Problem):
         # Initialize the parent class
         super().__init__(**kwargs)
 
-    
+
     def _evaluate(self, x, out, *args, **kwargs):
         """
         This function defines the evaluation of the problem. That is, the
