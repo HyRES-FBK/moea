@@ -26,6 +26,7 @@ def find_version(file_path: str) -> str:
     except FileNotFoundError:
         return "File not found"
 
+
 @app.command()
 def version():
     """Show the version of the MOEA package"""
@@ -36,11 +37,21 @@ def version():
 # Add more commands as needed
 @app.command()
 def run(
-    algorithm: str = typer.Argument(default="NSGA-II", help="The optimization algorithm."),
-    model: str = typer.Argument(default="", help="The model to be optimized."),
-    data_file: str = typer.Argument(default="", help="The data file to be used, which must be stored in EnergyPLAN Data folder."),
-    pop_size: int = typer.Option(default=25, help="The population size."),
-    n_gen: int = typer.Option(default=100, help="The number of generations used as stopping criterion.")
+    algorithm: str = typer.Argument(
+        default="NSGA-II",
+        help="The optimization algorithm."),
+    model: str = typer.Argument(
+        default="",
+        help="The model to be optimized."),
+    data_file: str = typer.Argument(
+        default="",
+        help="The reference data file in ``EnergyPLAN Data/Data`` folder."),
+    pop_size: int = typer.Option(
+        default=25,
+        help="The population size."),
+    n_gen: int = typer.Option(
+        default=100,
+        help="The number of generations used as stopping criterion.")
 ):
     """
     Run the optimization algorithm.
@@ -62,7 +73,8 @@ def run(
         problem=problem,
         algorithm=algorithm,
         termination=('n_gen', n_gen),
-        verbose=True
+        verbose=True,
+        save_history=True
     )
 
     logger.info("Optimization finished.")

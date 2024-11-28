@@ -3,8 +3,7 @@ import numpy as np
 import pandas as pd
 from typing import Union, List, Tuple
 from pathlib import Path
-from moea.config import (ENERGYPLAN_EXE, ENERGYPLAN_SPOOL, ENERGYPLAN_RESULTS,
-                         ENERGYPLAN_DATA_DIR)
+from moea.config import ENERGYPLAN_EXE, ENERGYPLAN_SPOOL, ENERGYPLAN_RESULTS
 
 from functools import lru_cache
 
@@ -232,7 +231,7 @@ def dump_input(input_dict: dict, i: int, data: dict,
         An id for the input file to be dumped.
 
     ``destination`` : str or Path
-    
+
         The folder where the input file will be saved.
 
     """

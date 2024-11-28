@@ -2,7 +2,7 @@
 # GLOBALS                                                                       #
 #################################################################################
 
-PROJECT_NAME = manthova
+PROJECT_NAME = moea
 PYTHON_VERSION = 3.10
 PYTHON_INTERPRETER = python
 
@@ -15,7 +15,7 @@ PYTHON_INTERPRETER = python
 .PHONY: requirements
 requirements:
 	conda env update --name $(PROJECT_NAME) --file environment.yml --prune
-	
+
 
 
 
@@ -44,9 +44,9 @@ format:
 .PHONY: create_environment
 create_environment:
 	conda env create --name $(PROJECT_NAME) -f environment.yml
-	
+
 	@echo ">>> conda env created. Activate with:\nconda activate $(PROJECT_NAME)"
-	
+
 
 
 
