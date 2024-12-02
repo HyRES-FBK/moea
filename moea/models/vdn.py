@@ -3,12 +3,10 @@ import pandas as pd
 from typing import Union
 from pathlib import Path
 
-from pymoo.core.variable import Real
-
 
 from moea.utils import (dump_input, find_values, execute_energyplan_spool,
                         parse_output)
-from moea.config import ENERGYPLAN_RESULTS
+from moea.config import ENERGYPLAN_RESULTS, logger
 from moea.models.base_model import BaseModel
 
 
@@ -22,7 +20,7 @@ class ValDiNon(BaseModel):
 
     def __init__(self,
                  year: int,
-                 scenario: dict,
+                 scenario: dict = None,
                  data_file: Union[str, Path] = "VdN_SH_2008.txt",
                  **kwargs):
         """
@@ -79,6 +77,12 @@ class ValDiNon(BaseModel):
         self.year = year
         # Set the scenario
         self.scenario = scenario
+
+        # If no scenario is provided, use the default one
+        if self.scenario is None:
+            logger.warning("No scenario provided. Using the default one.")
+            self.scenario = pd.read_csv('docs/use-cases/vdn-scenarios.csv',
+                                        index_col=0)["2020"].to_dict()
 
         # Initialize the parent class
         super().__init__(
@@ -147,27 +151,33 @@ class ValDiNon(BaseModel):
         oilBoilerFuelDemand = oilBoilerPercentage * \
             self.scenario["totalHeatDemand"] / \
             self.scenario["oilBoilerEfficiency"]
-        oilBoilerSolarFuelDemand = oilBoilerFuelDemand * oilSolarPercentage
+        oilSolarThermal = oilBoilerFuelDemand * oilSolarPercentage
+
         # Fuel demand for nGas boiler
         nGasBoilerFuelDemand = nGasBoilerPercentage * \
             self.scenario["totalHeatDemand"] / \
             self.scenario["nGasBoilerEfficiency"]
-        nGasBoilerSolarFuelDemand = nGasBoilerFuelDemand * nGasSolarPercentage
+        nGasSolarThermal = nGasBoilerFuelDemand * nGasSolarPercentage
+
         # Fuel demand for biomass boiler
         biomassBoilerFuelDemand = biomassBoilerPercentage * \
             self.scenario["totalHeatDemand"] / \
             self.scenario["biomassBoilerEfficiency"]
-        biomassBoilerSolarFuelDemand = biomassBoilerFuelDemand * \
+        biomassBoilerSolarThermal = biomassBoilerFuelDemand * \
             biomassSolarPercentage
+
         # Fuel demand for biomass microCHP
         biomassMicroCHPFuelDemand = biomassMicroCHPPercentage * \
             self.scenario["totalHeatDemand"]
-        biomassMicroCHPSolarFuelDemand = biomassMicroCHPFuelDemand * \
-            microCHPSolarPercentage
+        biomassMicroCHPSolarThermal = biomassMicroCHPFuelDemand * \
+            microCHPSolarPercentage * self.scenario["efficiencyBiomassCHP"]
+
         # Fuel demand for heat pump
         heatPumpFuelDemand = heatPumpPercentage * \
             self.scenario["totalHeatDemand"]
-        heatPumpSolarFuelDemand = heatPumpFuelDemand * hpSolarPercentage
+        # TODO: Check if this is correct
+        heatPumpSolarThermal = heatPumpPercentage * hpSolarPercentage * \
+            self.scenario["totalHeatDemand"]
 
         # Calculate the number of conventional cars and electric cars
         numberOfConCars = totalDieselDemandInGWhForTrns * 1e6 / \
@@ -183,16 +193,16 @@ class ValDiNon(BaseModel):
             dump_input({
                 "input_RES1_capacity": ind[PV].astype(int),
                 "input_fuel_Households[2]": oilBoilerFuelDemand[i],
-                "input_HH_oilboiler_Solar": oilBoilerSolarFuelDemand[i],
+                "input_HH_oilboiler_Solar": oilSolarThermal[i],
                 "input_fuel_Households[3]": nGasBoilerFuelDemand[i],
-                "input_HH_ngasboiler_Solar": nGasBoilerSolarFuelDemand[i],
+                "input_HH_ngasboiler_Solar": nGasSolarThermal[i],
                 "input_fuel_Households[4]": biomassBoilerFuelDemand[i],
-                "input_HH_bioboiler_Solar": biomassBoilerSolarFuelDemand[i],
+                "input_HH_bioboiler_Solar": biomassBoilerSolarThermal[i],
                 "input_HH_BioCHP_heat": biomassMicroCHPFuelDemand[i],
-                "input_HH_bioCHP_solar": biomassMicroCHPSolarFuelDemand[i],
+                "input_HH_bioCHP_solar": biomassMicroCHPSolarThermal[i],
                 "input_HH_HP_heat": heatPumpFuelDemand[i],
-                "input_HH_HP_Solar": heatPumpSolarFuelDemand[i],
-                "input_fuel_Transport[2]": totalDieselDemandInGWhForTrns[i],
+                "input_HH_HP_solar": heatPumpSolarThermal[i],
+                "input_fuel_Transport[5]": totalDieselDemandInGWhForTrns[i],
                 "Input_Size_transport_conventional_cars": numberOfConCars[i],
                 "input_transport_TWh": totalElecDemandInGWhForTrns[i],
                 "Input_Size_transport_electric_cars": numberOfEVCars[i],
@@ -227,7 +237,7 @@ class ValDiNon(BaseModel):
             annual_lbl = [i for i in D.keys() if 'TOTAL FOR ONE YEAR' in i][0]
             fuel_lbl = [i for i in D.keys() if 'ANNUAL FUEL' in i][0]
             z[HYDRO, i] = float(D[annual_lbl]["Hydro Electr."])
-            z[PV, i] = float(D[annual_lbl]["PV Electr."].max())
+            z[PV, i] = float(D[annual_lbl]["PV Electr."])
             z[IMPORT, i] = float(D[annual_lbl]["Import Electr."])
             z[EXPORT, i] = float(D[annual_lbl]["Export Electr."])
             z[HH_CHP, i] = float(D[annual_lbl]["HH-CHP Electr."])
@@ -250,7 +260,7 @@ class ValDiNon(BaseModel):
         # Compute the second objective: additional cost
 
         totalAdditionalCost = (z[HYDRO] + z[PV] + z[IMPORT] - z[EXPORT] + \
-                               z[HH_CHP] - totalVariableCost) * \
+                               z[HH_CHP]) * \
             self.scenario["additionalCostPerGWhinKEuro"]
 
         actualAnnualCost = totalVariableCost + fixedOperationalCost + \
