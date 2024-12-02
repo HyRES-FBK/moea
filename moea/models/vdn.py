@@ -12,7 +12,22 @@ from moea.models.base_model import BaseModel
 
 class ValDiNon(BaseModel):
     """
-    This problem class replicates the model in
+    This problem class replicates the model in {cite:ps}`MAHBUB20171487`.
+
+    The problem implementation refers [this implementation]
+    (https://github.com/shaikatcse/EnergyPLANDomainKnowledgeEAStep1/blob/master/src/reet/fbk/eu/OptimizeEnergyPLANVdN/problem/EnergyPLANProblemVdN2DWithElecVehicleModifiedCO2.java)
+    by Mahbub's.
+
+    There is a domain knowledge for each of the objectives. For each domain,
+    knowledge is provided in the form of a boolean value. The domains are:
+        - ``dk0``: Describes if a variable contributes to minimizing the
+        emission of CO2. If ``True``, the variable increases the CO2 emission.
+        If ``False``, the variable decreases the CO2 emission. If ``None``,
+        the variable does not affect the CO2 emission.
+        - ``dk1``: Describes if a variable contributes to minimizing the total
+        annual cost. If ``True``, the variable increases the total annual cost.
+        If ``False``, the variable decreases the total annual cost. If
+        ``None``, the variable does not affect the total annual cost.
 
     """
 	# Common data for all scenarios
@@ -57,20 +72,30 @@ class ValDiNon(BaseModel):
             The values will be replaced by the values of the decision variables
             when generating the input files.
         """
-        # Define the input variables. The variables chosen here are the same
-        # as the ones used in EPLANopt https://github.com/matpri/EPLANopt.git
+
         self.vars = pd.DataFrame.from_dict({
-            "PVCapacity": {"lb": 936.0, "ub": 40000.0},
-            "oilBoilerPercentage": {"lb": 0, "ub": 1},
-            "nGasBoilerPercentage": {"lb": 0, "ub": 1},
-            "biomassBoilerPercentage": {"lb": 0, "ub": 1},
-            "biomassMicroCHPPercentage": {"lb": 0, "ub": 1},
-            "electricCarPercentage": {"lb": 0, "ub": 1},
-            "oilBoilerSolarThermalPercentage": {"lb": 0, "ub": 1},
-            "nGasBoilerSolarThermalPercentage": {"lb": 0, "ub": 1},
-            "biomassBoilerSolarThermalPercentage": {"lb": 0, "ub": 1},
-            "biomassMicroCHPSolarThermalPercentage": {"lb": 0, "ub": 1},
-            "heatPumpSolarThermalPercentage": {"lb": 0, "ub": 1},
+            "PVCapacity": \
+                {"lb": 936.0, "ub": 40000.0, "dk0": True, "dk1": False},
+            "oilBoilerPercentage": \
+                {"lb": 0, "ub": 1, "dk0": False, "dk1": None},
+            "nGasBoilerPercentage": \
+                {"lb": 0, "ub": 1, "dk0": None, "dk1": None},
+            "biomassBoilerPercentage": \
+                {"lb": 0, "ub": 1, "dk0": True, "dk1": True},
+            "biomassMicroCHPPercentage": \
+                {"lb": 0, "ub": 1, "dk0": True, "dk1": False},
+            "electricCarPercentage": \
+                {"lb": 0, "ub": 1, "dk0": True, "dk1": False},
+            "oilBoilerSolarThermalPercentage": \
+                {"lb": 0, "ub": 1, "dk0": False, "dk1": False},
+            "nGasBoilerSolarThermalPercentage": \
+                {"lb": 0, "ub": 1, "dk0": False, "dk1": False},
+            "biomassBoilerSolarThermalPercentage": \
+                {"lb": 0, "ub": 1, "dk0": True, "dk1": True},
+            "biomassMicroCHPSolarThermalPercentage": \
+                {"lb": 0, "ub": 1, "dk0": True, "dk1": False},
+            "heatPumpSolarThermalPercentage": \
+                {"lb": 0, "ub": 1, "dk0": True, "dk1": None},
         }, orient="index")
 
         # Store the year
