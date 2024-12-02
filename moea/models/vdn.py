@@ -262,7 +262,7 @@ class ValDiNon(BaseModel):
             annual_lbl = [i for i in D.keys() if 'TOTAL FOR ONE YEAR' in i][0]
             fuel_lbl = [i for i in D.keys() if 'ANNUAL FUEL' in i][0]
             z[HYDRO, i] = float(D[annual_lbl]["Hydro Electr."])
-            z[PV, i] = float(D[annual_lbl]["PV Electr."])
+            z[PV, i] = float(D[annual_lbl]["PV Electr."].max())
             z[IMPORT, i] = float(D[annual_lbl]["Import Electr."])
             z[EXPORT, i] = float(D[annual_lbl]["Export Electr."])
             z[HH_CHP, i] = float(D[annual_lbl]["HH-CHP Electr."])

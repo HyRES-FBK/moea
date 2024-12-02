@@ -12,6 +12,29 @@ All utility functions are defined here.
 """
 
 
+def solow_polasky(X: np.ndarray):
+    """
+    Returns the Solow-Polasky metric for a set of solutions organized in a
+    matrix, where rows are solutions and columns are decision variables.
+
+    Parameters
+    ----------
+    - ``X`` : np.ndarray
+
+        An array with decision variables. Rows are solutions, columns are
+        decision variables.
+    """
+    # Calculate the value of the normalizing scalar theta
+    theta = 1 / np.mean(np.linalg.norm(X, axis=-1))
+    # Collect pairwise distances between solutions
+    distances = np.linalg.norm(X[:, None] - X[None, :], axis=-1)
+    M = np.exp(- theta * distances)
+    # Compute the inverse of M
+    M_inv = np.linalg.inv(M)
+    # Return the sum of all the elements in the inverse of M
+    return np.sum(M_inv)
+
+
 def execute_energyplan(input_file: Union[str, Path],
                        output_file: Union[str, Path]) -> None:
     """

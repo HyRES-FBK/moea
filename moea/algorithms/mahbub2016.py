@@ -8,7 +8,7 @@ class Mahbub2016(BaseAlgorithm):
     def __init__(self,
                  pop_size=100,
                  sampling=DomainKnowledgeInitialization(
-                        betas=[2.0, 3.0, 4.0],
+                    betas=[2.0, 3.0, 4.0],
                  ),
                 #  mutation=PM(eta=20),
                  **kwargs):
