@@ -1,0 +1,72 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Aalborg",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "moea.cli",
+            "args": [
+                "run",
+                "base_algorithm",
+                "aalborga",
+                "Aalborg2050_2objectives.txt",
+                "--pop-size",
+                "20",
+                "--n-gen",
+                "2"
+            ]
+        },
+        {
+            "name": "Giudicarie",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "moea.cli",
+            "args": [
+                "run",
+                "base_algorithm",
+                "giudicarie",
+                "CEISCompleteCurrent.txt",
+                "--pop-size",
+                "5",
+                "--n-gen",
+                "5"
+            ]
+        },
+        {
+            "name": "Val di Non",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "moea.cli",
+            "args": [
+                "run",
+                "base_algorithm",
+                "vdn",
+                "VdN_SH_2020_Opt_Scenario_2DS_El_mob.txt",
+                "--pop-size",
+                "5",
+                "--n-gen",
+                "2"
+            ]
+        },
+        {
+            "name": "Mahbub2016",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "moea.cli",
+            "args": [
+                "run",
+                "mahbub2016",
+                "vdn",
+                "VdN_SH_2020_Opt_Scenario_2DS_El_mob.txt",
+                "--pop-size",
+                "5",
+                "--n-gen",
+                "2"
+            ]
+        }
+    ]
+}
