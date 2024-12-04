@@ -269,19 +269,21 @@ class DomainKnowledgeMutation(Mutation):
         eta = get(self.eta, size=len(X))
         prob_var = self.get_prob_var(problem, size=len(X))
 
-        # Create a mask to select half of the decision variables
-        mask = np.random.choice([True, False], size=len(X.shape[0]))
+        # Create a mask to split the decision variables
+        mask = np.random.choice([True, False], size=X.shape[0])
 
         # The first domain knowledge is used
         dk = self.dk_names[0]
-        X0 = modified_polynomial_mutation(X[mask], problem.xl, problem.xu, eta,
-                                          prob_var, problem.vars[dk],
+        X0 = modified_polynomial_mutation(X[mask], problem.xl, problem.xu,
+                                          eta[mask], prob_var[mask],
+                                          problem.vars[dk],
                                           self.at_least_once)
 
         # The second domain knowledge is used
         dk = self.dk_names[1]
-        X1 = modified_polynomial_mutation(X[~mask], problem.xl, problem.xu, eta,
-                                          prob_var, problem.vars[dk],
+        X1 = modified_polynomial_mutation(X[~mask], problem.xl, problem.xu,
+                                          eta[~mask], prob_var[~mask],
+                                          problem.vars[dk],
                                           self.at_least_once)
 
         return np.concatenate([X0, X1], axis=0)
