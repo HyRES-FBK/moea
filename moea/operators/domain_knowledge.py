@@ -7,6 +7,8 @@ from pymoo.core.variable import get, Real
 from pymoo.operators.crossover.binx import mut_binomial
 from pymoo.operators.repair.to_bound import set_to_bounds_if_outside
 
+from moea.utils import solow_polasky_diversification
+
 
 def delta():
     return np.random.rand()
@@ -21,9 +23,9 @@ def decreasing(beta):
 
 
 def generate_sample(problem, o, beta, dv):
-    if problem.vars[f"dk{o}"].iloc[dv]:
+    if problem.vars[f"dk{o}"].iloc[dv] == True:
         return increasing(beta)
-    if not problem.vars[f"dk{o}"].iloc[dv]:
+    if problem.vars[f"dk{o}"].iloc[dv] == False:
         return decreasing(beta)
     elif problem.vars[f"dk{o}"].iloc[dv] is None:
         return np.random.rand()
@@ -51,65 +53,85 @@ class DomainKnowledgeInitialization(Sampling):
             # Iterate over the number of objectives/knowledge domains
             for j in range(o):
                 # Generate 1000 samples of beta vectors of length d
-                beta_samples = np.random.randint(len(self.betas) - 1,
-                                                 size=(N, d))
+                beta_samples = np.random.choice(self.betas, size=(N, d))
                 # Iterate over the number of beta vectors
                 for k in range(len(beta_samples)):
                     # Generate the samples for the current beta vector
                     for dv in range(d):
                         X[i * (o * N) + j * N + k, dv] = generate_sample(
-                            problem, j, self.betas[beta_samples[k, dv]], dv
+                            problem, j, beta_samples[k, dv], dv
                         )
         if problem.has_bounds():
             xl, xu = problem.bounds()
             assert np.all(xu >= xl)
             X = xl + (xu - xl) * X
 
-        # Pick n_samples samples from the generated samples
-        X = X[np.random.choice(X.shape[0], n_samples, replace=False), :]
+        # Scale the samples in the range [0, 1]
+        X = (X - problem.xl) / (problem.xu - problem.xl)
+
+        # Pick n_samples individuals from the generated samples
+        X = solow_polasky_diversification(X, theta=6.0, size=n_samples)
+
+        # Rescale the samples back to the original range
+        X = problem.xl + (problem.xu - problem.xl) * X
         return X
 
 
-def mut_pm(X, xl, xu, eta, prob, at_least_once):
+def modified_polynomial_mutation(X, xl, xu, eta, prob, dk, at_least_once):
+
     n, n_var = X.shape
-    assert len(eta) == n
-    assert len(prob) == n
 
-    Xp = np.full(X.shape, np.inf)
+    # Create a copy of the decision variables
+    Xp = np.copy(X)
 
+    # Define whether the mutation should be applied or not
     mut = mut_binomial(n, n_var, prob, at_least_once=at_least_once)
+    # Exclude cases where the lower and upper bounds are the same
     mut[:, xl == xu] = False
 
-    Xp[:, :] = X
+    # Define the lower and upper bounds for the mutation
+    _xl = np.repeat(xl[None, :], X.shape[0], axis=0)
+    _xu = np.repeat(xu[None, :], X.shape[0], axis=0)
 
-    _xl = np.repeat(xl[None, :], X.shape[0], axis=0)[mut]
-    _xu = np.repeat(xu[None, :], X.shape[0], axis=0)[mut]
+    eta = np.repeat(eta[:, None], X.shape[1], axis=1)
 
-    X = X[mut]
-    eta = np.tile(eta[:, None], (1, n_var))[mut]
-
-    delta1 = (X - _xl) / (_xu - _xl)
-    delta2 = (_xu - X) / (_xu - _xl)
-
+    # Define mutation power to ease readability
     mut_pow = 1.0 / (eta + 1.0)
 
+    # Define random values to be used in the mutation process
     rand = np.random.random(X.shape)
-    mask = rand <= 0.5
-    mask_not = np.logical_not(mask)
 
-    deltaq = np.zeros(X.shape)
+    # Define gamma max value
+    gamma_max = np.min([(X - _xl), (_xu - X) / (_xu - _xl)], axis=0)
 
-    xy = 1.0 - delta1
-    val = 2.0 * rand + (1.0 - 2.0 * rand) * (np.power(xy, (eta + 1.0)))
-    d = np.power(val, mut_pow) - 1.0
-    deltaq[mask] = d[mask]
+    # Map domain knowledge to numerical values
+    dk_values = np.zeros(dk.values.shape)
+    for i in range(dk.values.shape[0]):
+        if dk.values[i] == True:
+            dk_values[i] = 1
+        elif dk.values[i] == False:
+            dk_values[i] = -1
+        else:
+            dk_values[i] = 0
 
-    xy = 1.0 - delta2
-    val = 2.0 * (1.0 - rand) + 2.0 * (rand - 0.5) * (np.power(xy, (eta + 1.0)))
-    d = 1.0 - (np.power(val, mut_pow))
-    deltaq[mask_not] = d[mask_not]
+    # Compute increasing variables
+    deltaq = np.where(
+        dk_values == 1,
+        1 - (1 - rand + rand * np.pow(1 - gamma_max, eta + 1)) ** mut_pow,
+        rand
+    )
 
-    # mutated values
+    # Compute decreasing variables
+    deltaq = np.where(
+        dk_values == -1,
+        - 1 + (rand + (1 - rand) * np.pow(1 - gamma_max, eta + 1)) ** mut_pow,
+        deltaq
+    )
+
+    # All the variables that are not increasing or decreasing are left as they
+    # are since they were sampled randomly from a uniform distribution
+
+    # # mutated values
     _Y = X + deltaq * (_xu - _xl)
 
     # back in bounds if necessary (floating point issues)
@@ -117,7 +139,7 @@ def mut_pm(X, xl, xu, eta, prob, at_least_once):
     _Y[_Y > _xu] = _xu[_Y > _xu]
 
     # set the values for output
-    Xp[mut] = _Y
+    Xp[mut] = _Y[mut]
 
     # in case out of bounds repair (very unlikely)
     Xp = set_to_bounds_if_outside(Xp, xl, xu)
@@ -127,10 +149,30 @@ def mut_pm(X, xl, xu, eta, prob, at_least_once):
 
 class RenewableEnergyFavourMutation(Mutation):
 
-    def __init__(self, prob=0.9, eta=20, at_least_once=False, **kwargs):
+    def __init__(self, prob=0.9, eta=20, dk_name="dk0", at_least_once=False,
+                 **kwargs):
+        """
+        Parameters
+        ----------
+        - ``prob`` : float
+            The probability of mutating a decision variable.
+
+        - ``eta`` : float
+            The mutation power.
+
+        - ``dk_name`` : str
+            The name of the column in the DataFrame that stores the domain
+            knowledge.
+
+        - ``at_least_once`` : bool
+            Whether at least one decision variable should be mutated.
+
+        - ``kwargs`` : dict
+        """
         super().__init__(prob=prob, **kwargs)
         self.at_least_once = at_least_once
         self.eta = Real(eta, bounds=(3.0, 30.0), strict=(1.0, 100.0))
+        self.dk = dk_name
 
     def _do(self, problem, X, params=None, **kwargs):
         X = X.astype(float)
@@ -138,7 +180,9 @@ class RenewableEnergyFavourMutation(Mutation):
         eta = get(self.eta, size=len(X))
         prob_var = self.get_prob_var(problem, size=len(X))
 
-        Xp = mut_pm(X, problem.xl, problem.xu, eta, prob_var, at_least_once=self.at_least_once)
+        Xp = modified_polynomial_mutation(X, problem.xl, problem.xu, eta,
+                                          prob_var, problem.vars[self.dk],
+                                          self.at_least_once)
 
         return Xp
 
@@ -147,11 +191,103 @@ class REFM(RenewableEnergyFavourMutation):
     pass
 
 
-class ConventionalEnergyFavourMutation():
-    pass
+class ConventionalEnergyFavourMutation(Mutation):
+
+    def __init__(self, prob=0.9, eta=20, dk_name="dk1", at_least_once=False,
+                 **kwargs):
+        """
+        Parameters
+        ----------
+        - ``prob`` : float
+            The probability of mutating a decision variable.
+
+        - ``eta`` : float
+            The mutation power.
+
+        - ``dk_name`` : str
+            The name of the column in the DataFrame that stores the domain
+            knowledge.
+
+        - ``at_least_once`` : bool
+            Whether at least one decision variable should be mutated.
+
+        - ``kwargs`` : dict
+        """
+        super().__init__(prob=prob, **kwargs)
+        self.at_least_once = at_least_once
+        self.eta = Real(eta, bounds=(3.0, 30.0), strict=(1.0, 100.0))
+        self.dk = dk_name
+
+    def _do(self, problem, X, params=None, **kwargs):
+        X = X.astype(float)
+
+        eta = get(self.eta, size=len(X))
+        prob_var = self.get_prob_var(problem, size=len(X))
+
+        Xp = modified_polynomial_mutation(X, problem.xl, problem.xu, eta,
+                                          prob_var, problem.vars[self.dk],
+                                          self.at_least_once)
+
+        return Xp
 
 
 class CEFM(ConventionalEnergyFavourMutation):
+    pass
+
+
+class DomainKnowledgeMutation(Mutation):
+
+    def __init__(self, prob=0.9, eta=20, dk_names=["dk0", "dk1"],
+                 at_least_once=False, **kwargs):
+        """
+        Parameters
+        ----------
+        - ``prob`` : float
+            The probability of mutating a decision variable.
+
+        - ``eta`` : float
+            The mutation power.
+
+        - ``dk_names`` : list(str)
+            The name of the column in the DataFrame that stores the domain
+            knowledge.
+
+        - ``at_least_once`` : bool
+            Whether at least one decision variable should be mutated.
+
+        - ``kwargs`` : dict
+        """
+        super().__init__(prob=prob, **kwargs)
+        self.at_least_once = at_least_once
+        self.eta = Real(eta, bounds=(3.0, 30.0), strict=(1.0, 100.0))
+        assert len(dk_names) == 2, "Two domain knowledge names are required."
+        self.dk_names = dk_names
+
+    def _do(self, problem, X, params=None, **kwargs):
+        X = X.astype(float)
+
+        eta = get(self.eta, size=len(X))
+        prob_var = self.get_prob_var(problem, size=len(X))
+
+        # Create a mask to select half of the decision variables
+        mask = np.random.choice([True, False], size=len(X.shape[0]))
+
+        # The first domain knowledge is used
+        dk = self.dk_names[0]
+        X0 = modified_polynomial_mutation(X[mask], problem.xl, problem.xu, eta,
+                                          prob_var, problem.vars[dk],
+                                          self.at_least_once)
+
+        # The second domain knowledge is used
+        dk = self.dk_names[1]
+        X1 = modified_polynomial_mutation(X[~mask], problem.xl, problem.xu, eta,
+                                          prob_var, problem.vars[dk],
+                                          self.at_least_once)
+
+        return np.concatenate([X0, X1], axis=0)
+
+
+class DKMutation(DomainKnowledgeMutation):
     pass
 
 
