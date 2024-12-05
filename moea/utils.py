@@ -12,27 +12,49 @@ All utility functions are defined here.
 """
 
 
-def solow_polasky(X: np.ndarray):
+def solow_polasky_diversification(X: np.ndarray,
+                                  theta: float,
+                                  size: int
+                                  ) -> np.ndarray:
     """
-    Returns the Solow-Polasky metric for a set of solutions organized in a
-    matrix, where rows are solutions and columns are decision variables.
+    Returns the set of solutions with cardinality equal to ``size`` that
+    maximize the Solow-Polasky metric for a given population of solutions
+    ``X``.
 
     Parameters
     ----------
     - ``X`` : np.ndarray
+        The population of solutions. Rows are solutions, columns are decision
+        variables.
+    - ``theta`` : float
+        The normalizing scalar for the Solow-Polasky metric.
+    - ``size`` : int
+        The number of solutions to be selected.
 
-        An array with decision variables. Rows are solutions, columns are
-        decision variables.
+    Returns
+    -------
+    - np.ndarray
+        The selected solutions.
     """
-    # Calculate the value of the normalizing scalar theta
-    theta = 1 / np.mean(np.linalg.norm(X, axis=-1))
-    # Collect pairwise distances between solutions
+    assert X.shape[0] > size
+    # Create a copy of the population to remove solutions iteratively
+    Xp = X.copy()
+    # Calculate Euclidean distances between solutions
     distances = np.linalg.norm(X[:, None] - X[None, :], axis=-1)
     M = np.exp(- theta * distances)
-    # Compute the inverse of M
     M_inv = np.linalg.inv(M)
-    # Return the sum of all the elements in the inverse of M
-    return np.sum(M_inv)
+    # Remove solutions with the smallest differences iteratively
+    while M_inv.shape[0] > size:
+        # Compute differences
+        diffs = np.pow(np.sum(M_inv, axis=0), 2) / np.diag(M_inv)
+        # Find the solution with the smallest difference
+        idx = np.argmin(diffs)
+        # Remove the idx-th row and column from M
+        M_inv = np.delete(M_inv, idx, axis=0)
+        M_inv = np.delete(M_inv, idx, axis=1)
+        # Remove the solution from the population
+        Xp = np.delete(Xp, idx, axis=0)
+    return Xp
 
 
 def execute_energyplan(input_file: Union[str, Path],
