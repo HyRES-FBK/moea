@@ -223,13 +223,53 @@ def find_position(file_path: Union[str, Path], key: str) -> Tuple[int, int]:
     """
     Return the line number of a specific key in a file.
     """
-    with open(file_path, 'r', encoding='windows-1252') as f:
-        lines = f.readlines()
-    for i, line in enumerate(lines):
+    # Open the file and read line by line
+    file = open(file_path, 'r', encoding='windows-1252')
+    i = 0
+    while i < 80:
+        line = next(file)
+        # If the key is a tuple, then continue
+        if type(key) == tuple:
+            i += 1
+            continue
+        # Read the line and split it by tabs
         line = [ln.strip() for ln in line.split('\t')]
         for j, col in enumerate(line):
             if key in col:
+                file.close()
                 return i, j + 1
+        i += 1
+    # Read lines 81 and 82
+    ln1 = next(file).split('\t')
+    ln2 = next(file).split('\t')
+    i += 2
+    # Create keys by joining the two lines
+    keys = [f"{ln1[i].strip()} {ln2[i].strip()}" for i in range(len(ln1))]
+    # Find the column index
+    for j, k in enumerate(keys):
+        if key[1] in k:
+            break
+    # Look for the row index, after row 104 there are hourly values
+    while i < 104:
+        line = next(file)
+        if key[0] in line:
+            file.close()
+            return i, j
+        i += 1
+
+    if not file.closed:
+        file.close()
+
+
+@lru_cache(maxsize=None)
+def find_positions(file_path: Union[str, Path], *keys: str) -> np.ndarray:
+    """
+    Return an array with row and column positions for a list of keys.
+    """
+    positions = []
+    for key in keys:
+        positions.append(find_position(file_path, key))
+    return np.stack(positions)
 
 
 def find_objectives(file_path: Union[str, Path], *keys: str) -> List[float]:
@@ -237,13 +277,14 @@ def find_objectives(file_path: Union[str, Path], *keys: str) -> List[float]:
     Find the value of a key in a file. The value is assumed to be in the line
     immediately after the key.
     """
+    idxs = find_positions(file_path, *keys)
     values = []
     with open(file_path, 'r', encoding='windows-1252') as f:
         lines = f.readlines()
-        for key in keys:
-            line, row = find_position(file_path, key)
+        for i, j in idxs:
             values.append(
-                float(lines[line].split('\t')[row].strip().replace(',', '.')))
+                float(lines[i].split('\t')[j].strip().replace(',', '.'))
+            )
     return np.array(values)
 
 

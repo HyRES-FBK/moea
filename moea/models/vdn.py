@@ -238,35 +238,31 @@ class ValDiNon(BaseModel):
 
         # Parse the output file and store the objective function value in an
         # array
-        (localCO2emission, totalVariableCost,
-         fixedOperationalCost, investmentCost) = find_values(
+        z = find_values(
             ENERGYPLAN_RESULTS,
             "CO2-emission (total)",
             "Variable costs",
             "Fixed operation costs",
             "Annual Investment costs",
+            ("Annual", "Hydro Electr."),
+            ("Annual", "PV Electr."),
+            ("Annual", "Import Electr."),
+            ("Annual", "Export Electr."),
+            ("Annual", "HH-CHP Electr."),
+            "Biomass Consumption"
         ).T
 
         # Retrieve:
-        PV = 0  # annual PV electricity
-        HYDRO = 1  # annual hydropower
-        IMPORT = 2  # annual import
-        EXPORT = 3  # annual export
-        HH_CHP = 4  # annual HH electricity CHP
-        BIOMASS = 5  # annual biomass consumption
-
-        z = np.zeros((6, len(x)))
-
-        for i, res in enumerate(ENERGYPLAN_RESULTS.glob("*.txt")):
-            D = parse_output(res)
-            annual_lbl = [i for i in D.keys() if 'TOTAL FOR ONE YEAR' in i][0]
-            fuel_lbl = [i for i in D.keys() if 'ANNUAL FUEL' in i][0]
-            z[HYDRO, i] = float(D[annual_lbl]["Hydro Electr."])
-            z[PV, i] = float(D[annual_lbl]["PV Electr."].max())
-            z[IMPORT, i] = float(D[annual_lbl]["Import Electr."])
-            z[EXPORT, i] = float(D[annual_lbl]["Export Electr."])
-            z[HH_CHP, i] = float(D[annual_lbl]["HH-CHP Electr."])
-            z[BIOMASS, i] = float(D[fuel_lbl]['TOTAL']["Biomass Consumption"])
+        CO2 = 0  # local CO2 emissions
+        VAR_COST = 1  # total variable cost
+        FIX_COST = 2  # fixed operational cost
+        INV_COST = 3  # investment cost
+        PV = 4  # annual PV electricity
+        HYDRO = 5  # annual hydropower
+        IMPORT = 6  # annual import
+        EXPORT = 7  # annual export
+        HH_CHP = 8  # annual HH electricity CHP
+        BIOMASS = 9  # annual biomass consumption
 
         # Compute the first objective: local CO2 emissions
 
@@ -279,7 +275,7 @@ class ValDiNon(BaseModel):
             100 * self.scenario["co2NGas"] * 3600 / 1e6
 
         # Calculate local CO2 emissions
-        locaCO2Emission = localCO2emission + co2InImportedEleCoal + \
+        locaCO2Emission = z[CO2] + co2InImportedEleCoal + \
             co2InImportedEleOil + co2InImportedEleNGas
 
         # Compute the second objective: additional cost
@@ -288,8 +284,8 @@ class ValDiNon(BaseModel):
                                z[HH_CHP]) * \
             self.scenario["additionalCostPerGWhinKEuro"]
 
-        actualAnnualCost = totalVariableCost + fixedOperationalCost + \
-            investmentCost + totalAdditionalCost
+        actualAnnualCost = z[VAR_COST] + z[FIX_COST] + z[INV_COST] + \
+            totalAdditionalCost
 
         # Set objectives
         out["F"] = np.column_stack([locaCO2Emission, actualAnnualCost])
