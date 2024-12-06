@@ -223,7 +223,9 @@ def find_position(file_path: Union[str, Path], key: str) -> Tuple[int, int]:
     """
     Return the line number of a specific key in a file.
     """
-    for i, line in enumerate(open(file_path, 'r', encoding='windows-1252')):
+    with open(file_path, 'r', encoding='windows-1252') as f:
+        lines = f.readlines()
+    for i, line in enumerate(lines):
         line = [ln.strip() for ln in line.split('\t')]
         for j, col in enumerate(line):
             if key in col:

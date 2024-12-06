@@ -10,7 +10,7 @@ class TestAalborg(unittest.TestCase):
 
     def setUp(self) -> None:
         self.model = get_model('AalborgA')
-        self.algorithm = get_algorithm('NSGAII', pop_size=5)
+        self.algorithm = get_algorithm('NSGAII', pop_size=10)
         return super().setUp()
 
     def test_model_features(self):
@@ -22,7 +22,7 @@ class TestAalborg(unittest.TestCase):
         res = minimize(
             problem=self.model,
             algorithm=self.algorithm,
-            termination=('n_gen', 3),
+            termination=('n_gen', 10),
             seed=1
         )
         self.assertIsNotNone(res.X)
