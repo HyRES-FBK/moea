@@ -6,6 +6,7 @@ parts:
   chapters:
   - file: contents/getting-started.md
   - file: contents/usage.md
+  - file: contents/energyplan.md
   - file: contents/documentation.md
 - caption: Reference cases
   chapters:
