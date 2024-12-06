@@ -176,47 +176,43 @@ class GiudicarieEsteriori(BaseModel):
         execute_energyplan_spool([f"input{i}.txt" for i in range(len(x))])
 
         # Retrieve CO2 emissions and total annual costs
-        co2, totalVariableCost, fixedOperationalCost, investmentCost = \
-            find_values(
+        z = find_values(
                 ENERGYPLAN_RESULTS,
                 "CO2-emission (corrected)",
                 "Variable costs",
                 "Fixed operation costs",
-                "Annual Investment costs"
+                "Annual Investment costs",
+                ("Annual", "Hydro Electr."),
+                ("Annual", "PV Electr."),
+                ("Annual", "Wave Electr."),
+                ("Annual", "Import Electr."),
+                ("Annual", "Export Electr."),
+                ("Annual", "HH-CHP Electr."),
+                ("Annual", "HH-HP Electr."),
+                ("Annual", "Electr. Demand"),
+                "Ngas Consumption",
+                "Oil Consumption",
+                "Biomass Consumption",
+                ("Annual", "Flexible Electr.")
             ).T
 
         # Retrieve:
-        PV = 0  # annual PV electricity
-        HYDRO = 1  # annual hydropower
-        WAVE = 2  # annual wave power
-        IMPORT = 3  # annual import
-        EXPORT = 4  # annual export
-        HP = 5  # annual HP electricity
-        HH_CHP = 6  # annual HH electricity CHP
-        DEMAND = 7  # annual demand
-        NGAS = 8  # annual natural gas
-        OIL = 9  # annual oil
-        BIOMASS = 10  # annual biomass
-        FLEXI = 11  # annual flexible demand
-
-        z = np.zeros((12, len(x)))
-
-        for i, res in enumerate(ENERGYPLAN_RESULTS.glob("*.txt")):
-            D = parse_output(res)
-            annual_lbl = [i for i in D.keys() if 'TOTAL FOR ONE YEAR' in i][0]
-            fuel_lbl = [i for i in D.keys() if 'ANNUAL FUEL' in i][0]
-            z[HYDRO, i] = float(D[annual_lbl]["Hydro Electr."])
-            z[PV, i] = float(D[annual_lbl]["PV Electr."])
-            z[WAVE, i] = float(max(D[annual_lbl]["Wave Electr."]))
-            z[IMPORT, i] = float(D[annual_lbl]["Import Electr."])
-            z[EXPORT, i] = float(D[annual_lbl]["Export Electr."])
-            z[HH_CHP, i] = float(D[annual_lbl]["HH-CHP Electr."])
-            z[HP, i] = float(D[annual_lbl]["HH-HP Electr."])
-            z[DEMAND, i] = float(D[annual_lbl]["Electr. Demand"])
-            z[NGAS, i] = float(D[fuel_lbl]['TOTAL']["Ngas Consumption"])
-            z[OIL, i] = float(D[fuel_lbl]['TOTAL']["Oil Consumption"])
-            z[BIOMASS, i] = float(D[fuel_lbl]['TOTAL']["Biomass Consumption"])
-            z[FLEXI, i] = float(D[annual_lbl]["Flexible Electr."])
+        CO2 = 0  # annual CO2 emissions
+        VAR_COST = 1  # annual variable costs
+        FIX_COST = 2  # annual fixed costs
+        INV_COST = 3  # annual investment costs
+        PV = 3  # annual PV electricity
+        HYDRO = 4  # annual hydropower
+        WAVE = 5  # annual wave power
+        IMPORT = 6  # annual import
+        EXPORT = 7  # annual export
+        HP = 8  # annual HP electricity
+        HH_CHP = 9  # annual HH electricity CHP
+        DEMAND = 10  # annual demand
+        NGAS = 11  # annual natural gas
+        OIL = 12  # annual oil
+        BIOMASS = 13  # annual biomass
+        FLEXI = 14  # annual flexible demand
 
         totalAdditionalCost = ((
             z[HYDRO] + z[PV] + z[HH_CHP] + z[IMPORT] - z[EXPORT]
@@ -297,7 +293,7 @@ class GiudicarieEsteriori(BaseModel):
             investmentCostReductionLPGBoiler
 
         # Compute the real investment cost
-        realInvestmentCost = investmentCost - \
+        realInvestmentCost = z[INV_COST] - \
             reductionInvestmentCost + geoBoreHoleInvestmentCost
 
         # Electric car related costs
@@ -314,7 +310,7 @@ class GiudicarieEsteriori(BaseModel):
                 self.electricCarOperationalAndMaintanenceCost
 
         # Compute the actual annual cost, which is the third objective
-        actualAnnualCost = totalVariableCost + fixedOperationalCost + \
+        actualAnnualCost = z[VAR_COST] + z[FIX_COST] + \
             realInvestmentCost + totalAdditionalCost + \
             totalInvestmentCostForElectricCars + \
                 totalFixOperationalAndInvestmentCostForElectricCars
@@ -338,7 +334,7 @@ class GiudicarieEsteriori(BaseModel):
             totalPEConsumption
 
         out["F"] = np.column_stack([
-            co2, actualAnnualCost, LFS, ESD
+            z[CO2], actualAnnualCost, LFS, ESD
         ])
 
         ##########################
