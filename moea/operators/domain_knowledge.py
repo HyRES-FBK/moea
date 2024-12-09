@@ -3,7 +3,9 @@ from typing import Union, List
 
 from pymoo.core.sampling import Sampling
 from pymoo.core.mutation import Mutation
+from pymoo.core.callback import Callback
 from pymoo.core.variable import get, Real
+from pymoo.operators.mutation.pm import mut_pm
 from pymoo.operators.crossover.binx import mut_binomial
 from pymoo.operators.repair.to_bound import set_to_bounds_if_outside
 
@@ -101,9 +103,6 @@ def modified_polynomial_mutation(X, xl, xu, eta, prob, dk, at_least_once):
     # Define random values to be used in the mutation process
     rand = np.random.random(X.shape)
 
-    # Define gamma max value
-    gamma_max = np.min([(X - _xl), (_xu - X) / (_xu - _xl)], axis=0)
-
     # Map domain knowledge to numerical values
     dk_values = np.zeros(dk.values.shape)
     for i in range(dk.values.shape[0]):
@@ -117,14 +116,16 @@ def modified_polynomial_mutation(X, xl, xu, eta, prob, dk, at_least_once):
     # Compute increasing variables
     deltaq = np.where(
         dk_values == 1,
-        1 - (1 - rand + rand * np.pow(1 - gamma_max, eta + 1)) ** mut_pow,
+        1 - (1 - rand + rand * np.pow(1 - ((_xu - X) / (_xu - _xl)),
+                                      eta + 1)) ** mut_pow,
         rand
     )
 
     # Compute decreasing variables
     deltaq = np.where(
         dk_values == -1,
-        - 1 + (rand + (1 - rand) * np.pow(1 - gamma_max, eta + 1)) ** mut_pow,
+        - 1 + (rand + (1 - rand) * np.pow(1 - ((X - _xl) / (_xu - _xl)),
+                                          eta + 1)) ** mut_pow,
         deltaq
     )
 
@@ -269,24 +270,38 @@ class DomainKnowledgeMutation(Mutation):
         eta = get(self.eta, size=len(X))
         prob_var = self.get_prob_var(problem, size=len(X))
 
-        # Create a mask to split the decision variables
-        mask = np.random.choice([True, False], size=X.shape[0])
+        # Check that termination criterion is set to
+        # MaximumGenerationTermination
+        assert type(kwargs["algorithm"].termination).__name__ == \
+            "MaximumGenerationTermination", \
+            "The termination criterion must be MaximumGenerationTermination."
+
+        # Modify the mutation probability
+        prob_var = 1 - kwargs["algorithm"].n_gen / \
+            kwargs["algorithm"].termination.n_max_gen
+
+        # Create a three way split of the decision variables
+        mask = np.random.choice([0, 1, 2], size=X.shape[0])
 
         # The first domain knowledge is used
         dk = self.dk_names[0]
-        X0 = modified_polynomial_mutation(X[mask], problem.xl, problem.xu,
-                                          eta[mask], prob_var[mask],
+        X0 = modified_polynomial_mutation(X[mask == 0], problem.xl, problem.xu,
+                                          eta[mask == 0], prob_var[mask == 0],
                                           problem.vars[dk],
                                           self.at_least_once)
 
         # The second domain knowledge is used
         dk = self.dk_names[1]
-        X1 = modified_polynomial_mutation(X[~mask], problem.xl, problem.xu,
-                                          eta[~mask], prob_var[~mask],
+        X1 = modified_polynomial_mutation(X[mask == 1], problem.xl, problem.xu,
+                                          eta[mask == 1], prob_var[mask == 1],
                                           problem.vars[dk],
                                           self.at_least_once)
 
-        return np.concatenate([X0, X1], axis=0)
+        # The rest of the decision variables undergo polynomial mutation
+        X2 = mut_pm(X[mask == 2], problem.xl, problem.xu, eta[mask == 2],
+                    prob_var[mask == 2], self.at_least_once)
+
+        return np.concatenate([X0, X1, X2], axis=0)
 
 
 class DKMutation(DomainKnowledgeMutation):
