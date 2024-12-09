@@ -42,13 +42,20 @@ class AalborgA(BaseModel):
         """
         # Define the input variables.
         self.vars = pd.DataFrame.from_dict({
-            'input_cap_chp3_el': {'lb':0, 'ub': 1000},
-            'input_cap_hp3_el': {'lb':0, 'ub': 1000},
-            'input_cap_pp_el': {'lb': 0, 'ub': 1000},
-            'input_RES1_capacity': {'lb': 0, 'ub': 1500},
-            'input_RES2_capacity': {'lb': 0, 'ub': 1500},
-            'input_RES3_capacity': {'lb': 0, 'ub': 1500},
-            'input_cap_boiler3_th': {'lb': 0, 'ub': 10000},
+            'input_cap_chp3_el': \
+                {'lb':0, 'ub': 1000, "dk0": True, "dk1": False},
+            'input_cap_hp3_el': \
+                {'lb':0, 'ub': 1000, "dk0": True, "dk1": False},
+            'input_cap_pp_el': \
+                {'lb': 0, 'ub': 1000, "dk0": None, "dk1": None},
+            'input_RES1_capacity': \
+                {'lb': 0, 'ub': 1500, "dk0": True, "dk1": False},
+            'input_RES2_capacity': \
+                {'lb': 0, 'ub': 1500, "dk0": True, "dk1": False},
+            'input_RES3_capacity': \
+                {'lb': 0, 'ub': 1500, "dk0": True, "dk1": False},
+            'input_cap_boiler3_th': \
+                {'lb': 0, 'ub': 10000, "dk0": None, "dk1": None},
         }, dtype=float, orient='index')
 
         # Initialize the parent class
@@ -144,13 +151,20 @@ class AalborgB(BaseModel):
         """
         # Define the input variables.
         self.vars = pd.DataFrame.from_dict({
-            'input_cap_chp3_el': {'lb':0, 'ub': 1000},
-            'input_cap_hp3_el': {'lb':0, 'ub': 1000},
-            'input_cap_pp_el': {'lb': 0, 'ub': 1000},
-            'input_RES1_capacity': {'lb': 0, 'ub': 1500},
-            'input_RES2_capacity': {'lb': 0, 'ub': 1500},
-            'input_RES3_capacity': {'lb': 0, 'ub': 1500},
-            'input_cap_boiler3_th': {'lb': 0, 'ub': 10000},
+            'input_cap_chp3_el': \
+                {'lb':0, 'ub': 1000, "dk0": True, "dk1": False},
+            'input_cap_hp3_el': \
+                {'lb':0, 'ub': 1000, "dk0": True, "dk1": False},
+            'input_cap_pp_el': \
+                {'lb': 0, 'ub': 1000, "dk0": None, "dk1": None},
+            'input_RES1_capacity': \
+                {'lb': 0, 'ub': 1500, "dk0": True, "dk1": False},
+            'input_RES2_capacity': \
+                {'lb': 0, 'ub': 1500, "dk0": True, "dk1": False},
+            'input_RES3_capacity': \
+                {'lb': 0, 'ub': 1500, "dk0": True, "dk1": False},
+            'input_cap_boiler3_th': \
+                {'lb': 0, 'ub': 10000, "dk0": None, "dk1": None},
         }, dtype=float, orient='index')
 
         # Initialize the parent class
