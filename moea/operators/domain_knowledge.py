@@ -268,7 +268,6 @@ class DomainKnowledgeMutation(Mutation):
         X = X.astype(float)
 
         eta = get(self.eta, size=len(X))
-        prob_var = self.get_prob_var(problem, size=len(X))
 
         # Check that termination criterion is set to
         # MaximumGenerationTermination
@@ -277,8 +276,8 @@ class DomainKnowledgeMutation(Mutation):
             "The termination criterion must be MaximumGenerationTermination."
 
         # Modify the mutation probability
-        prob_var = 1 - kwargs["algorithm"].n_gen / \
-            kwargs["algorithm"].termination.n_max_gen
+        prob_var = np.repeat(1 - kwargs["algorithm"].n_gen /
+                             kwargs["algorithm"].termination.n_max_gen, len(X))
 
         # Create a three way split of the decision variables
         mask = np.random.choice([0, 1, 2], size=X.shape[0])
@@ -287,15 +286,13 @@ class DomainKnowledgeMutation(Mutation):
         dk = self.dk_names[0]
         X0 = modified_polynomial_mutation(X[mask == 0], problem.xl, problem.xu,
                                           eta[mask == 0], prob_var[mask == 0],
-                                          problem.vars[dk],
-                                          self.at_least_once)
+                                          problem.vars[dk], self.at_least_once)
 
         # The second domain knowledge is used
         dk = self.dk_names[1]
         X1 = modified_polynomial_mutation(X[mask == 1], problem.xl, problem.xu,
                                           eta[mask == 1], prob_var[mask == 1],
-                                          problem.vars[dk],
-                                          self.at_least_once)
+                                          problem.vars[dk], self.at_least_once)
 
         # The rest of the decision variables undergo polynomial mutation
         X2 = mut_pm(X[mask == 2], problem.xl, problem.xu, eta[mask == 2],
