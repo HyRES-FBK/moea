@@ -4,8 +4,7 @@ from typing import Union
 from pathlib import Path
 
 
-from moea.utils import (dump_input, find_values, execute_energyplan_spool,
-                        parse_output)
+from moea.utils import dump_input, find_values, execute_energyplan_spool
 from moea.config import ENERGYPLAN_RESULTS, logger
 from moea.models.base_model import BaseModel
 
