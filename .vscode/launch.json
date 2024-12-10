@@ -27,7 +27,7 @@
             "module": "moea.cli",
             "args": [
                 "run",
-                "base_algorithm",
+                "mahbub2016",
                 "giudicarie",
                 "CEISCompleteCurrent.txt",
                 "--pop-size",

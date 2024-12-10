@@ -91,12 +91,54 @@ class GiudicarieEsteriori(BaseModel):
         """
 
         self.vars = pd.DataFrame.from_dict({
-            "PVCapacity": {"lb": 5000, "ub": 42000},        # PV capacity
-            "oilBoilerPercentage": {"lb": 0, "ub": 1},      # Oil boiler heat %
-            "LPGBoilerPercentage": {"lb": 0, "ub": 1},      # LPG boiler heat %
-            "biomassBoilerPercentage": {"lb": 0, "ub": 1},  # Biomass boiler heat
-            "biomassCHP": {"lb": 0, "ub": 1},               # Biomass micro-CHP heat %
-            "electricCarPercentage": {"lb": 0, "ub": 1},    # Electric car %
+            "PVCapacity": {
+                "lb": 5000,
+                "ub": 42000,
+                "dk0": True,  # Domain knowledge about renewable energy
+                "dk1": False,  # Domain knowledge about conventional PP
+                "dk2": False,  # Domain knowledge about load following capacity
+                "dk3": True  # Domain knowledge about ESD
+            },
+            "oilBoilerPercentage": {
+                "lb": 0,
+                "ub": 1,
+                "dk0": False,
+                "dk1": None,
+                "dk2": None,
+                "dk3": False
+            },
+            "LPGBoilerPercentage": {
+                "lb": 0,
+                "ub": 1,
+                "dk0": None,
+                "dk1": None,
+                "dk2": None,
+                "dk3": False
+            },
+            "biomassBoilerPercentage": {
+                "lb": 0,
+                "ub": 1,
+                "dk0": True,
+                "dk1": True,
+                "dk2": None,
+                "dk3": True
+            },
+            "biomassCHP": {
+                "lb": 0,
+                "ub": 1,
+                "dk0": True,
+                "dk1": False,
+                "dk2": True,
+                "dk3": True
+            },
+            "electricCarPercentage": {
+                "lb": 0,
+                "ub": 1,
+                "dk0": True,
+                "dk1": False,
+                "dk2": None,
+                "dk3": True
+            },
         }, dtype=float, orient='index')
 
         super().__init__(
