@@ -15,7 +15,7 @@ class ValDiNon(BaseModel):
 
     The problem implementation refers [this implementation]
     (https://github.com/shaikatcse/EnergyPLANDomainKnowledgeEAStep1/blob/master/src/reet/fbk/eu/OptimizeEnergyPLANVdN/problem/EnergyPLANProblemVdN2DWithElecVehicleModifiedCO2.java)
-    by Mahbub's.
+    by Mahbub.
 
     There is a domain knowledge for each of the objectives. For each domain,
     knowledge is provided in the form of a boolean value. The domains are:
