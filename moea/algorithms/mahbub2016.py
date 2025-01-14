@@ -9,14 +9,14 @@ class Mahbub2016(BaseAlgorithm):
 
     def __init__(self,
                  pop_size=100,
-                #  sampling=DomainKnowledgeInitialization(betas=[2.0, 4.0]),
+                 sampling=DomainKnowledgeInitialization(betas=[2.0, 4.0]),
                  crossover=SBX(eta=10, prob=0.9),
                  mutation=DKMutation(eta=10, prob=0.1),
                  **kwargs):
 
         super().__init__(
             pop_size=pop_size,
-            # sampling=sampling,
+            sampling=sampling,
             crossover=crossover,
             mutation=mutation,
             **kwargs)

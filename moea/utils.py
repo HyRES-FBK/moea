@@ -38,22 +38,38 @@ def solow_polasky_diversification(X: np.ndarray,
     """
     assert X.shape[0] > size
     # Create a copy of the population to remove solutions iteratively
-    Xp = X.copy()
-    # Calculate Euclidean distances between solutions
-    distances = np.linalg.norm(X[:, None] - X[None, :], axis=-1)
-    M = np.exp(- theta * distances)
-    M_inv = np.linalg.inv(M)
-    # Remove solutions with the smallest differences iteratively
-    while M_inv.shape[0] > size:
-        # Compute differences
-        diffs = np.pow(np.sum(M_inv, axis=0), 2) / np.diag(M_inv)
-        # Find the solution with the smallest difference
-        idx = np.argmin(diffs)
-        # Remove the idx-th row and column from M
-        M_inv = np.delete(M_inv, idx, axis=0)
-        M_inv = np.delete(M_inv, idx, axis=1)
-        # Remove the solution from the population
-        Xp = np.delete(Xp, idx, axis=0)
+    Xp = np.zeros((1, X.shape[1]))
+    # Copy the first solution
+    Xp[0] = X[0]
+    # Remove the first solution from the population
+    X = X[1:]
+    # Compute the distance of each solution to the selected population
+    r = np.linalg.norm(X - np.repeat(Xp, X.shape[0], axis=0), axis=1)
+    # Add the solution with the maximum distance to the selected population
+    Xp = np.vstack((Xp, X[np.argmax(r)]))
+    # Remove the selected solution from the population
+    X = np.delete(X, np.argmax(r), axis=0)
+    # Add individuals
+    for i in range(1, size):
+        Q = np.linalg.norm(Xp[:, None] - Xp[None, :], axis=-1)
+        Q = np.exp(- theta * Q)
+        Qinv = np.linalg.inv(Q)
+        sp = np.zeros(X.shape[0])
+        # Evaluate candidates
+        for j in range(X.shape[0]):
+            # Calculate the contribution of the candidate to the diversity
+            # of the population
+            r = np.linalg.norm(Xp - np.repeat(X[j, None], Xp.shape[0], axis=0),
+                               axis=1)
+            v = - r.T @ Qinv @ r
+            W = Qinv @ r
+            phi = np.sum(W)
+            sp[j] = (1 / v) * np.pow(phi -1, 2)
+        # Move the individual with the highest diversity contribution to the
+        # selected population
+        Xp = np.vstack((Xp, X[np.argmax(sp)]))
+        # Remove the selected individual from the population
+        X = np.delete(X, np.argmax(sp), axis=0)
     return Xp
 
 
