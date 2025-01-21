@@ -23,11 +23,10 @@ required.
 If you want to use a different version of EnergyPLAN, you can change the folder
 named ``EnergyPLAN``.
 
-```{warning}
+
 Be aware that EnergyPLAN requires to respect a specific folder structure.
 Since the MOEA exploits EnergyPLAN's *spool* mode, check for the existence of
 the folders ``spool`` and ``spool/results``.
-```
 
 The only requirement of the project is to have **conda** available to generate
 a Python environment.
