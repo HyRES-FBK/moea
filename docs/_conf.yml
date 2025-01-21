@@ -1,7 +1,7 @@
 # In _config.yml
 title: Multi-objecive evolutionary algorithms for energy system optimization
 author: Michele Urbani
-copyright: 2024, Sustanable Energy Center, Fondazione Bruno Kessler
+copyright: 2025, Sustanable Energy Center, Fondazione Bruno Kessler
 logo: fbk-logo.png
 execute:
   execute_notebooks: force
