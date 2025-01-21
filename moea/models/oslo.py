@@ -8,7 +8,7 @@ from moea.config import ENERGYPLAN_RESULTS
 from moea.models.base_model import BaseModel
 
 
-class AalborgA(BaseModel):
+class Oslo(BaseModel):
     """
     Description of the model
     """
@@ -29,7 +29,7 @@ class AalborgA(BaseModel):
 
         self.vars = pd.DataFrame.from_dict({
             'input_RES1_capacity': {"lb": 0, "ub": 1},
-        })
+        }, orient='index', dtype=float)
 
         # Initialize the parent class
         super().__init__(
