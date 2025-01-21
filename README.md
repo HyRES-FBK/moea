@@ -1,4 +1,4 @@
-# 🧬 MOEA for Energy Scenario Optimization
+# :dna: MOEA for Energy Scenario Optimization
 
 <a target="_blank" href="https://cookiecutter-data-science.drivendata.org/">
     <img src="https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter" />
@@ -83,7 +83,7 @@ When a new model is created, to make it available to the function
 ``get_model``, it must be added to the list of models in the ``__init__.py``
 file of the ``models`` package.
 
-### Define an algorithm (optional) (work in progress)
+### :toolbox: Algorithm definition
 
 Custom algorithms can be defined by the user.
 New algorithms can inherit from existing algorithms and modify only specific
@@ -98,7 +98,7 @@ When a new algorithm is created, to make it available to the function
 ``get_algorithm``, it must be added to the list of models in the
 ``__init__.py`` file of the ``algorithms`` package.
 
-### Run an MOEA algorithm
+### :man_biking: Run an MOEA algorithm
 
 If the Python environment was created without errors, the application ``moea``
 should be accessible from the command line when the environment is active.
