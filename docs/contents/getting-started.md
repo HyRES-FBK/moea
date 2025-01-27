@@ -38,7 +38,7 @@ conda activate moea
 
 Alternatively, you check the ``environment.yml`` file and setup your own
 enviroment manually using ``pip``. In this latter case remember to install the
-``moea`` package using ``pip
+``moea`` package using ``pip install -e .``.
 
 ## Usage
 
