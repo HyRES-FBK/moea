@@ -62,7 +62,10 @@ def run(
     data_file = ENERGYPLAN_DATA_DIR / data_file
 
     # Import the model dynamically
-    problem = get_model(model, data_file)
+    if not data_file.exists():
+        problem = get_model(model, data_file)
+    else:
+        problem = get_model(model)
 
     # Import the algorithm dynamically
     algorithm = get_algorithm(algorithm, pop_size=pop_size)
