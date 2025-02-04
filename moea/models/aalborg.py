@@ -192,8 +192,8 @@ class AalborgB(BaseModel):
         # Retrieve values for boiler heat and PP capacity
         x[:, (2, 6)] = find_values(
             ENERGYPLAN_RESULTS,
-            ("Annual Maximum", "Boiler 3 Heat"),
             ("Annual Maximum", "PP Electr."),
+            ("Annual Maximum", "Boiler 3 Heat"),
         )
         # Dump the full list of variables to a file
         for i, ind in enumerate(x):
