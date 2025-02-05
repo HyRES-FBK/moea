@@ -320,7 +320,8 @@ def clean_results_folder() -> None:
 
 
 def dump_input(input_dict: dict, i: int, data: dict,
-               destination: Union[str, Path] = ENERGYPLAN_SPOOL) -> None:
+               destination: Union[str, Path] = ENERGYPLAN_SPOOL,
+               clean_folder: bool = True) -> None:
     """
     Dump the input vector to a file using EnergyPLAN syntax.
 
@@ -338,6 +339,10 @@ def dump_input(input_dict: dict, i: int, data: dict,
 
         The folder where the input file will be saved.
 
+    ``clean_folder`` : bool
+
+        If True, the folder will be cleaned before dumping the input file.
+
     """
     # Check if the destination is a Path object
     if not isinstance(destination, Path):
@@ -354,7 +359,8 @@ def dump_input(input_dict: dict, i: int, data: dict,
                 continue
             f.write(f"{k}=\n{v}\n")
     # Clean the results folder
-    clean_results_folder()
+    if clean_folder:
+        clean_results_folder()
 
 
 def setup_spool_folder() -> None:
