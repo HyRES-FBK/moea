@@ -353,20 +353,20 @@ class AalborgC(BaseModel):
             ("Annual Minimum", "Stabil. Load"),
         )
 
-        reductionInvestmentCost = (
-            (self.largeValueOfBoiler - maxBoiler3) *
+        reductionInvestmentCost = np.round(
+            ((self.largeValueOfBoiler - maxBoiler3) *
             self.boilerCostInMDDK * self.interest) / \
                 (1 - np.pow((1 + self.interest), - self.boilerLifeTime)) + \
                     ((self.largeValueOfPP - maxPP) * \
                      self.PPCostInMDKK * self.interest) / \
-                        (1 - np.pow((1 + self.interest), - self.PPLifeTime)
+                        (1 - np.pow((1 + self.interest), - self.PPLifeTime))
         )
 
-        reduceFixedOMCost = (
+        reduceFixedOMCost = np.round((
             (self.largeValueOfBoiler - maxBoiler3) *
              self.boilerCostInMDDK * self.fixedMOForBoilerinPercentage) + \
             ((self.largeValueOfPP - maxPP) *
-             self.PPCostInMDKK * self.fixedMOForPPinPercentage)
+             self.PPCostInMDKK * self.fixedMOForPPinPercentage))
 
         actualAnnualCost = Y[:, 1] - reductionInvestmentCost - \
             reduceFixedOMCost
@@ -390,7 +390,7 @@ class AalborgC(BaseModel):
 
         # Heat balance. This constraint enforces the system to produce exactly
         # the amount of heat necessary to meet the heat demand.
-        heat = np.array(Y[:, 3])
+        heat = - np.array(Y[:, 3])
 
         # Grid stabilization: More than 30% of power production in all hours
         # must come from units able to supply grid support (see [77] for
@@ -405,5 +405,7 @@ class AalborgC(BaseModel):
             stable_load,
             heat,
         ])
+
+
 if __name__ == "__main__":
     pass
