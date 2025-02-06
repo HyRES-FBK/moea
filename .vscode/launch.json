@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "AalborgA",
             "type": "debugpy",
@@ -32,6 +33,22 @@
                 "Aalborg2050_2objectives.txt",
                 "--pop-size",
                 "20",
+                "--n-gen",
+                "2"
+            ]
+        },
+        {
+            "name": "AalborgC",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "moea.cli",
+            "args": [
+                "run",
+                "base_algorithm",
+                "aalborgc",
+                "Aalborg_2050_Plan_A_44ForOptimization_2objectives.txt",
+                "--pop-size",
+                "5",
                 "--n-gen",
                 "2"
             ]
