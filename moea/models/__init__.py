@@ -1,14 +1,12 @@
 def get_model(name, *args, **kwargs):
     name = name.lower()
 
-    from moea.models.aalborg import AalborgA, AalborgB, AalborgC
+    from moea.models.aalborg import Aalborg
     from moea.models.giudicarie import GiudicarieEsteriori
     from moea.models.vdn import ValDiNon
 
     PROBLEM = {
-        'aalborga': AalborgA,
-        'aalborgb': AalborgB,
-        'aalborgc': AalborgC,
+        'aalborg': Aalborg,
         'giudicarie': GiudicarieEsteriori,
         'vdn': ValDiNon
     }
