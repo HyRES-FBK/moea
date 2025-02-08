@@ -6,39 +6,7 @@
     "configurations": [
 
         {
-            "name": "AalborgA",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "moea.cli",
-            "args": [
-                "run",
-                "mahbub2016",
-                "aalborga",
-                "Aalborg2050_2objectives.txt",
-                "--pop-size",
-                "20",
-                "--n-gen",
-                "2"
-            ]
-        },
-        {
-            "name": "AalborgB",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "moea.cli",
-            "args": [
-                "run",
-                "base_algorithm",
-                "aalborgb",
-                "Aalborg2050_2objectives.txt",
-                "--pop-size",
-                "20",
-                "--n-gen",
-                "2"
-            ]
-        },
-        {
-            "name": "AalborgC",
+            "name": "Aalborg",
             "type": "debugpy",
             "request": "launch",
             "module": "moea.cli",

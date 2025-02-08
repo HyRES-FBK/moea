@@ -8,14 +8,18 @@ from pymoo.operators.survival.rank_and_crowding import RankAndCrowding
 
 class BaseAlgorithm(NSGA2):
 
-    def __init__(self, pop_size=100, **kwargs):
+    def __init__(self,
+                 pop_size=100,
+                 crossover=SBX(eta=10, prob=0.9),
+                 mutation=PM(eta=10, prob=1/7),
+                 survival=RankAndCrowding(),
+                 **kwargs):
         super().__init__(
-            pop_size,
-            crossover=SBX(eta=10, prob=0.9),
-            mutation=PM(eta=10, prob=1/7),
-            survival=RankAndCrowding(),
-            **kwargs
-        )
+            pop_size=pop_size,
+            crossover=crossover,
+            mutation=mutation,
+            survival=survival,
+            **kwargs)
 
     def __str__(self) -> str:
         return self.__class__.__name__
