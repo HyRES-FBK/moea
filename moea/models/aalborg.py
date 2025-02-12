@@ -89,46 +89,13 @@ class Aalborg(BaseModel):
         )
 
     def _evaluate(self, x, out, *args, **kwargs):
-        # Iterate over individuals and create an input file for each one
-        # Dump the input vector to a file
-        keys_to_exclude = ['input_cap_boiler3_th', 'input_cap_pp_el']
+        # Dump the full list of variables to a file
         for i, ind in enumerate(x):
-            # Overwrite the values in self.data with the values in ind
-            dump_input({k: ind[j] for j, k in enumerate(self.vars.index)
-                        if k not in keys_to_exclude}, i, self.default_data)
+            dump_input({k: ind[j] for j, k in enumerate(self.vars.index)},
+                        i, self.default_data)
 
         # Call EnergyPLAN using spool mode; only the input files are needed
         execute_energyplan_spool([f"input{i}.txt" for i in range(len(x))])
-
-        # Retrieve values for boiler heat and PP capacity
-        maxPP, maxBoiler3 = find_values(
-            ENERGYPLAN_RESULTS,
-            ("Annual Maximum", "PP Electr."),
-            ("Annual Maximum", "Boiler 3 Heat"),
-        ).T
-
-        # Find the individuals that need a second evaluation, CHP > PP
-        mask = x[:, 0] > maxPP
-
-        # Where CHP > PP, set the decision variables according to the maximum
-        # power plant capacity and the maximum boiler capacity. The index 0
-        # corresponds to the power plant capacity, and the index 2 corresponds
-        # to the boiler capacity.
-        x[:, 0] = np.where(mask, maxPP, x[:, 0])
-        x[:, 2] = np.where(mask, maxPP, x[:, 2])
-
-        # Set the decision variables according to the maximum boiler capacity
-        x[:, 6] = np.where(mask, maxBoiler3, x[:, 6])
-
-        # Dump the full list of variables to a file
-        for i, ind in enumerate(x):
-            if mask[i]:
-                dump_input({k: ind[j] for j, k in enumerate(self.vars.index)},
-                           i, self.default_data, clean_folder=False)
-
-        # Call EnergyPLAN using spool mode; only the input files are needed
-        execute_energyplan_spool([f"input{i}.txt" for i in range(len(x))
-                                  if mask[i]])
 
         # Parse the output file
         Y = find_values(
@@ -140,31 +107,10 @@ class Aalborg(BaseModel):
             ("Annual Minimum", "Stabil. Load"),
         )
 
-        reductionInvestmentCost = np.round(
-            ((self.largeValueOfBoiler - maxBoiler3) *
-            self.boilerCostInMDDK * self.interest) / \
-                (1 - np.pow((1 + self.interest), - self.boilerLifeTime)) + \
-                    ((self.largeValueOfPP - maxPP) * \
-                     self.PPCostInMDKK * self.interest) / \
-                        (1 - np.pow((1 + self.interest), - self.PPLifeTime))
-        )
-
-        reduceFixedOMCost = np.round((
-            (self.largeValueOfBoiler - maxBoiler3) *
-             self.boilerCostInMDDK * self.fixedMOForBoilerinPercentage) + \
-            ((self.largeValueOfPP - maxPP) *
-             self.PPCostInMDKK * self.fixedMOForPPinPercentage))
-
-        actualAnnualCost = Y[:, 1] - reductionInvestmentCost - \
-            reduceFixedOMCost
-
         # The CO2 emissions are set directly from the results files, whereas
         # the cost is adjusted by the reduction in investment and fixed O&M
         # for the cases where CHP > PP.
-        out["F"] = np.column_stack([
-            Y[:, 0],
-            np.where(mask, Y[:, 1], actualAnnualCost)
-        ])
+        out["F"] = Y[:, :2]
 
         # CONSTRAINTS
         # Since there are a fes constraints, we evaluate the left-hand side
