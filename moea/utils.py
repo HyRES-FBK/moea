@@ -306,8 +306,11 @@ def find_objectives(file_path: Union[str, Path], *keys: str) -> List[float]:
 
 def find_values(results_folder: Union[str, Path], *keys: str) -> np.ndarray:
     values = []
-    for file in results_folder.glob('*.txt'):
-        values.append(find_objectives(file, *keys))
+    files = list(results_folder.glob('*.txt'))
+    for i in range(len(files)):
+        values.append(
+            find_objectives(results_folder / f'input{i}.txt.txt', *keys)
+        )
     return np.vstack(values)
 
 
