@@ -63,6 +63,5 @@ The syntax of the command is the following
 ```bash
 moea run ALGORITHM MODEL DATA_FILE_NAME
 ```
-
 which runs the algorithm with default parameters.
 The list of optional MOEA parameters, e.g., number of individuals in the initial population, number of generations, etc., can be listed using the ``--help`` flag for the ``run`` command.
