@@ -6,10 +6,10 @@ from moea.models import get_model
 from moea.algorithms import get_algorithm
 
 
-class TestAalborgA(unittest.TestCase):
+class TestAalborg(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.model = get_model('AalborgA')
+        self.model = get_model('Aalborg')
         self.algorithm = get_algorithm('NSGAII', pop_size=10)
         return super().setUp()
 
@@ -31,11 +31,11 @@ class TestAalborgA(unittest.TestCase):
         self.assertGreaterEqual(res.F.shape[0], 1)
 
 
-class TestAalborgB(unittest.TestCase):
+class TestAalborgMahbub2016(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.model = get_model('AalborgB')
-        self.algorithm = get_algorithm('NSGAII', pop_size=5)
+        self.model = get_model('Aalborg')
+        self.algorithm = get_algorithm('mahbub2016', pop_size=5)
         return super().setUp()
 
     def test_model_features(self):

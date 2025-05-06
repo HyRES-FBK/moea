@@ -25,12 +25,12 @@ def decreasing(beta):
 
 
 def generate_sample(problem, o, beta, dv):
-    if np.isnan(problem.vars[f"dk{o}"].iloc[dv]):
-        return np.random.rand()
-    elif problem.vars[f"dk{o}"].iloc[dv] == True:
+    if problem.vars[f"dk{o}"].iloc[dv] == True:
         return increasing(beta)
     elif problem.vars[f"dk{o}"].iloc[dv] == False:
         return decreasing(beta)
+    else:
+        return np.random.rand()
 
 
 class DomainKnowledgeInitialization(Sampling):
