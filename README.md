@@ -12,7 +12,7 @@ The code ease the interaction with EnergyPLAN and allows the user to focus on
 pre- and post-processing of data for energy modelling and optimization.
 
 For further details about the code, check the complete
-[documentation](https://moea-2a642b.pages.fbk.eu/).
+[documentation](https://hyres-fbk.github.io/moea/).
 
 ## :page_with_curl: Requirements
 
