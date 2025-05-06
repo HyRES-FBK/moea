@@ -8,18 +8,6 @@
 
 ::: moea.models.aalborg.AalborgA
 
-### Giudicarie Esteriori model
-
-::: moea.models.giudicarie.GiudicarieEsteriori
-
-### Val di Non model
-
-::: moea.models.vdn.ValDiNon
-
-### CEIS 2021 model
-
-::: moea.models.ceis2021.CEIS2021
-
 ## The ``BaseAlgorithm`` class
 
 ::: moea.algorithms.base_algorithm.BaseAlgorithm
