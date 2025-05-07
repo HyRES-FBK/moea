@@ -23,7 +23,7 @@ The options include:
 - ``-m`` to provide a modification file that will overwrite some of the options
 in a complete input file. It works only in combination with the ``-i`` options.
 
-```{admonition}
+```{warning}
 EnergyPLAN seems not to accept file names containing ``_`` or ``-``.
 ```
 
