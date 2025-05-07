@@ -9,6 +9,20 @@ The preferred environment to run the MOEA tool is via conda.
 All the code snippets in the following are executed in command line prompt
 (CMD, PowerShell, etc.) from the projecet folder.
 
+```{admonition}
+If you decide to use Anaconda, please be sure to add it to the system PATH,
+otherwise you will not be able to call it from the command line when creating
+the environment.
+
+If you already installed Anaconda and want to add conda to the system PATH,
+[this video](https://www.youtube.com/watch?v=fGbuwGCtDl4) provides you the solution.
+```
+
+```{admonition}
+Anaconda does not always works properly with PowerShell. If you are having
+troubles with PowerShell, please use the Command Prompt or `cmd`.
+```
+
 ### Requirements
 
 - The code runs only in **Windows OS** due to EnergyPLAN incompatibility with
@@ -23,7 +37,7 @@ To create a new conda environment, use the following command:
 conda env create -f environment.yml
 ```
 
-With the command above, you created a Python virtual environment whose name is 
+With the command above, you created a Python virtual environment whose name is
 ``moea``.
 
 ### Activate the environment
@@ -65,7 +79,7 @@ Try to run the Aalborg case with a limited population size and for a low
 number of generations.
 
 ```sh
-moea run nsga-ii AalborgA Aalborg2050_2objectives.txt --pop-size 5 --n-gen 5
+moea run nsga-ii Aalborg Aalborg2050_2objectives.txt --pop-size 5 --n-gen 5
 ```
 
 During the execution, an EnergyPLAN window will pop-up and disappear as many
