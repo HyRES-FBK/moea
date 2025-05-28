@@ -265,6 +265,13 @@ def find_position(file_path: Union[str, Path], key: str) -> Tuple[int, int]:
     for j, k in enumerate(keys):
         if key[1] in k:
             break
+
+    if j == len(keys) - 1:
+        file.close()
+        raise ValueError(
+            f"Colunm '{key[1]}' not found in in the list of columns {keys}"
+        )
+
     # Look for the row index, after row 104 there are hourly values
     while i < 104:
         line = next(file)
