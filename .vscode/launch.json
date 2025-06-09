@@ -5,6 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Riva - NSGAII",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "moea.cli",
+            "args": [
+                "run",
+                "nsga-ii",
+                "riva",
+                "Riva_future1.txt",
+                "--pop-size",
+                "5",
+                "--n-gen",
+                "2"
+            ]
+        },
+        {
             "name": "Aalborg - NSGAII",
             "type": "debugpy",
             "request": "launch",

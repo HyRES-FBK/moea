@@ -74,12 +74,14 @@ def solow_polasky_diversification(X: np.ndarray,
 
 
 def execute_energyplan(input_file: Union[str, Path],
-                       output_file: Union[str, Path]) -> None:
+                       output_file: Union[str, Path],
+                       energy_plan_path: Union[str, Path] = ENERGYPLAN_EXE
+                       ) -> None:
     """
     Execute EnergyPLAN with the input vector as input and read the output
     vector from a file.
     """
-    subprocess.run([str(ENERGYPLAN_EXE),
+    subprocess.run([str(energy_plan_path),
                     "-i", str(input_file),
                     "-ascii", str(output_file)])
 
@@ -295,7 +297,8 @@ def find_positions(file_path: Union[str, Path], *keys: str) -> np.ndarray:
     return np.stack(positions)
 
 
-def find_objectives(file_path: Union[str, Path], *keys: str) -> List[float]:
+def find_objectives(file_path: Union[str, Path], *keys: Union[str, tuple]
+                    ) -> np.ndarray:
     """
     Find the value of a key in a file. The value is assumed to be in the line
     immediately after the key.
@@ -311,7 +314,8 @@ def find_objectives(file_path: Union[str, Path], *keys: str) -> List[float]:
     return np.array(values)
 
 
-def find_values(results_folder: Union[str, Path], *keys: str) -> np.ndarray:
+def find_values(results_folder: Union[str, Path], *keys: Union[str, tuple]
+                ) -> np.ndarray:
     values = []
     files = list(results_folder.glob('*.txt'))
     for i in range(len(files)):
