@@ -1,10 +1,10 @@
-from typing import Union
+from typing import Union, Type
 from pathlib import Path
 
 from pymoo.core.problem import Problem
 
 from moea.utils import parse_input
-from moea.config import ENERGYPLAN_DATA_DIR
+from moea.energyplan.energyplan_base import EnergyPLANBase
 
 
 class BaseModel(Problem):
@@ -38,22 +38,10 @@ class BaseModel(Problem):
         # Check if data file exists
         if not data_file:
             raise ValueError("Data file must be provided.")
-        # If data file is string convert to Path
-        if type(data_file) is str:
-            data_file = Path(data_file)
-        # Add .txt extension if it is missing
-        if data_file.suffix == "":
-            data_file = data_file.with_suffix(".txt")
-        # Check that the data file name ends with .txt
-        if data_file.suffix != ".txt":
-            raise ValueError("Data file must be a text file.")
-        # Provide full path for the data file
-        data_file = ENERGYPLAN_DATA_DIR / data_file
-        # Check that the data file exists
-        if not data_file.exists():
-            raise FileNotFoundError(f"Data file {data_file} not found.")
         # Read data file and store values
-        self.default_data = parse_input(data_file)
+        self.energyplan = getattr(self, "energyplan_version")(
+            energyplan_data_file=data_file
+        )
 
         # Initialize the parent class
         super().__init__(**kwargs)

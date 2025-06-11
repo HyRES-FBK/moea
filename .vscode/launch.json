@@ -61,9 +61,9 @@
                 "run",
                 "mahbub2016",
                 "giudicarie",
-                "CEISCompleteCurrent.txt",
+                "CEIS_Complete_Current.txt",
                 "--pop-size",
-                "5",
+                "3",
                 "--n-gen",
                 "5"
             ]

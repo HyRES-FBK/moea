@@ -5,7 +5,6 @@ from loguru import logger
 
 from pymoo.optimize import minimize
 
-from moea.config import ENERGYPLAN_DATA_DIR
 from moea.models import get_model
 from moea.algorithms import get_algorithm
 
@@ -56,16 +55,7 @@ def run(
     """
     Run the optimization algorithm.
     """
-    # TODO: Check if the data file is in ANSI format
-
-    # Data file is in EnergyPLAN Data folder
-    data_file = ENERGYPLAN_DATA_DIR / data_file
-
-    # Import the model dynamically
-    if not data_file.exists():
-        problem = get_model(model, data_file)
-    else:
-        problem = get_model(model)
+    problem = get_model(model, data_file)
 
     # Import the algorithm dynamically
     algorithm = get_algorithm(algorithm, pop_size=pop_size)

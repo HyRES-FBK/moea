@@ -3,9 +3,12 @@ import numpy as np
 import pandas as pd
 from typing import Union, List, Tuple
 from pathlib import Path
-from moea.config import ENERGYPLAN_EXE, ENERGYPLAN_SPOOL, ENERGYPLAN_RESULTS
 
 from functools import lru_cache
+
+ENERGYPLAN_EXE = "."
+ENERGYPLAN_SPOOL = "spool"
+ENERGYPLAN_RESULTS = "results"
 
 """
 All utility functions are defined here.
