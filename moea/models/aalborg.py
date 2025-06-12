@@ -99,9 +99,9 @@ class Aalborg(BaseModel):
         Y = self.energyplan.read_values(
             "CO2-emission (corrected)",
             "TOTAL ANNUAL COSTS",
-            ("Annual Maximum", "Import Electr."),
-            ("Annual", "Balance3 Heat"),
-            ("Annual Minimum", "Stabil. Load"),
+            ("Maximum", "import"),
+            ("Annual", "heat3- balance"),
+            ("Minimum", "stab.- load"),
         )
 
         # The CO2 emissions are set directly from the results files, whereas
