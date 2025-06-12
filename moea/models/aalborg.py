@@ -3,8 +3,8 @@ import pandas as pd
 from typing import Union
 from pathlib import Path
 
-from moea.utils import dump_input, find_values, execute_energyplan_spool
 from moea.models.base_model import BaseModel
+from moea.energyplan.energyplan110 import EnergyPLAN110
 
 
 class Aalborg(BaseModel):
@@ -31,6 +31,8 @@ class Aalborg(BaseModel):
     The reference input file is
     ``Aalborg_2050_Plan_A_44ForOptimization_2objectives.txt``.
     """
+
+    energyplan_version = EnergyPLAN110
 
     # Large value for boiler & PP and other information
     largeValueOfBoiler = 1500
@@ -88,17 +90,13 @@ class Aalborg(BaseModel):
         )
 
     def _evaluate(self, x, out, *args, **kwargs):
-        # Dump the full list of variables to a file
-        for i, ind in enumerate(x):
-            dump_input({k: ind[j] for j, k in enumerate(self.vars.index)},
-                        i, self.default_data)
-
-        # Call EnergyPLAN using spool mode; only the input files are needed
-        execute_energyplan_spool([f"input{i}.txt" for i in range(len(x))])
+        self.energyplan.run(
+            inputs=[{k: ind[j] for j, k in enumerate(self.vars.index)}
+                    for ind in x]
+        )
 
         # Parse the output file
-        Y = find_values(
-            ENERGYPLAN_RESULTS,
+        Y = self.energyplan.read_values(
             "CO2-emission (corrected)",
             "TOTAL ANNUAL COSTS",
             ("Annual Maximum", "Import Electr."),
