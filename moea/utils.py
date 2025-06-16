@@ -268,7 +268,7 @@ def find_position(file_path: Union[str, Path], key: str) -> Tuple[int, int]:
     keys = [f"{ln1[i].strip()} {ln2[i].strip()}" for i in range(len(ln1))]
     # Find the column index
     for j, k in enumerate(keys):
-        if key[1] in k:
+        if key[1] == k:
             break
 
     if j == len(keys) - 1:

@@ -156,7 +156,7 @@ class GiudicarieEsteriori(BaseModel):
 
         pv = x[:, 0]
 
-        percentages = np.copy(x[:, 1:self.n_var])
+        percentages = np.copy(x[:, 1:self.n_var - 1])
         oilBoilerHeatPercentage = percentages[:, 0]
         LPGBoilerHeatPercentage = percentages[:, 1] - percentages[:, 0]
         biomassBoilerHeatPercentage = percentages[:, 2] -percentages[:, 1]
@@ -359,7 +359,7 @@ class GiudicarieEsteriori(BaseModel):
 
         totalPEConsumption = (totalLocalElecProduction - z[:, EXPORT]) * \
             PEFLocalElec + z[:, IMPORT] * self.PEFImport + z[:, BIOMASS] + \
-                z[:, OIL] + z[:, NGAS] + (self.totalHeatDemand * percentages[:, 4]) * \
+                z[:, OIL] + z[:, NGAS] + (self.totalHeatDemand * hpHeatPercentage) * \
                     (1 - 1 / self.COP)
 
         ESD = (z[:, IMPORT] * self.PEFImport + z[:, OIL] + z[:, NGAS]) / \
