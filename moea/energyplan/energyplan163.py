@@ -45,7 +45,7 @@ class EnergyPLAN163(EnergyPLANSpool):
         keys = [f"{ln1[i].strip()} {ln2[i].strip()}" for i in range(len(ln1))]
         # Find the column index
         for j, k in enumerate(keys):
-            if key[1] in k:
+            if key[1] == k:
                 break
 
         if j == len(keys) - 1:
