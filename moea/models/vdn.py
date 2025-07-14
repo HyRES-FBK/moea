@@ -8,6 +8,7 @@ from moea.utils import dump_input, find_values, execute_energyplan_spool
 ENERGYPLAN_RESULTS = "results"
 from moea.config import logger
 from moea.models.base_model import BaseModel
+from moea.energyplan.energyplan123 import EnergyPLAN123
 
 
 class ValDiNon(BaseModel):
@@ -30,13 +31,13 @@ class ValDiNon(BaseModel):
         ``None``, the variable does not affect the total annual cost.
 
     """
-	# Common data for all scenarios
-	# CO2 content related data
+
+    energyplan_version = EnergyPLAN123
 
     def __init__(self,
                  year: int,
-                 scenario: dict = None,
-                 data_file: Union[str, Path] = "VdN_SH_2008.txt",
+                 scenario: dict | None = None,
+                 data_file: Union[str, Path] = "VdN_2008.txt",
                  **kwargs):
         """
         Parameters:
@@ -105,7 +106,7 @@ class ValDiNon(BaseModel):
 
         # If no scenario is provided, use the default one
         if self.scenario is None:
-            logger.warning("No scenario provided. Using the default one.")
+            logger.info(f"No scenario provided. Use {data_file}.")
             self.scenario = pd.read_csv('docs/use-cases/vdn-scenarios.csv',
                                         index_col=0)["2020"].to_dict()
 
@@ -212,34 +213,32 @@ class ValDiNon(BaseModel):
             (self.scenario["efficiencyEVCar"] *
              self.scenario["averageKMPerYearPerCar"] * 1e3)
 
-        # Iterate over individuals and create an input file for each one
-        # Dump the input vector to a file
-        for i, ind in enumerate(x):
-            dump_input({
-                "input_RES1_capacity": ind[PV].astype(int),
-                "input_fuel_Households[2]": oilBoilerFuelDemand[i],
-                "input_HH_oilboiler_Solar": oilSolarThermal[i],
-                "input_fuel_Households[3]": nGasBoilerFuelDemand[i],
-                "input_HH_ngasboiler_Solar": nGasSolarThermal[i],
-                "input_fuel_Households[4]": biomassBoilerFuelDemand[i],
-                "input_HH_bioboiler_Solar": biomassBoilerSolarThermal[i],
-                "input_HH_BioCHP_heat": biomassMicroCHPFuelDemand[i],
-                "input_HH_bioCHP_solar": biomassMicroCHPSolarThermal[i],
-                "input_HH_HP_heat": heatPumpFuelDemand[i],
-                "input_HH_HP_solar": heatPumpSolarThermal[i],
-                "input_fuel_Transport[5]": totalDieselDemandInGWhForTrns[i],
-                "Input_Size_transport_conventional_cars": numberOfConCars[i],
-                "input_transport_TWh": totalElecDemandInGWhForTrns[i],
-                "Input_Size_transport_electric_cars": numberOfEVCars[i],
-            }, i, self.default_data)
-
-        # Call EnergyPLAN using spool mode; only the input files are needed
-        execute_energyplan_spool([f"input{i}.txt" for i in range(len(x))])
+        # Run EnergyPLAN
+        self.energyplan.run(
+            inputs=[
+                {
+                    "input_RES1_capacity": x[i, PV].astype(int),
+                    "input_fuel_Households[2]": oilBoilerFuelDemand[i],
+                    "input_HH_oilboiler_Solar": oilSolarThermal[i],
+                    "input_fuel_Households[3]": nGasBoilerFuelDemand[i],
+                    "input_HH_ngasboiler_Solar": nGasSolarThermal[i],
+                    "input_fuel_Households[4]": biomassBoilerFuelDemand[i],
+                    "input_HH_bioboiler_Solar": biomassBoilerSolarThermal[i],
+                    "input_HH_BioCHP_heat": biomassMicroCHPFuelDemand[i],
+                    "input_HH_bioCHP_solar": biomassMicroCHPSolarThermal[i],
+                    "input_HH_HP_heat": heatPumpFuelDemand[i],
+                    "input_HH_HP_solar": heatPumpSolarThermal[i],
+                    "input_fuel_Transport[5]": totalDieselDemandInGWhForTrns[i],
+                    "Input_Size_transport_conventional_cars": numberOfConCars[i],
+                    "input_transport_TWh": totalElecDemandInGWhForTrns[i],
+                    "Input_Size_transport_electric_cars": numberOfEVCars[i],
+                }
+            for i in range(x.shape[0])]
+        )
 
         # Parse the output file and store the objective function value in an
         # array
-        z = find_values(
-            ENERGYPLAN_RESULTS,
+        z = self.energyplan.read_values(
             "CO2-emission (total)",
             "Variable costs",
             "Fixed operation costs",
