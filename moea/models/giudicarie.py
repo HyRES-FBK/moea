@@ -157,6 +157,7 @@ class GiudicarieEsteriori(BaseModel):
         pv = x[:, 0]
 
         percentages = np.copy(x[:, 1:self.n_var - 1])
+        percentages = np.sort(percentages, axis=1)
         oilBoilerHeatPercentage = percentages[:, 0]
         LPGBoilerHeatPercentage = percentages[:, 1] - percentages[:, 0]
         biomassBoilerHeatPercentage = percentages[:, 2] -percentages[:, 1]
@@ -171,15 +172,15 @@ class GiudicarieEsteriori(BaseModel):
             (1 - electricCarPercentage)).astype(int)
         reducedPetrolDemandInGWh = \
             (reducedNumberOfPetrolCars * self.averageKMPerYearForPetrolCar * \
-             self.LCVPetrol) / (self.petrolCarRunsKMperL * 1e6)
+             self.LCVPetrol) / (self.petrolCarRunsKMperL * 1000000)
         reducedDieselDemandInGWh = \
             (reducedNumberOfDieselCars * self.averageKMPerYearForDieselCar * \
-                self.LCVDiesel) / (self.DieselCarRunsKMperL * 1e6)
+                self.LCVDiesel) / (self.DieselCarRunsKMperL * 1000000)
         elecCarRunKM = self.totalKMRunByCars - \
             (reducedNumberOfPetrolCars * self.averageKMPerYearForPetrolCar) - \
                 (reducedNumberOfDieselCars * self.averageKMPerYearForDieselCar)
         elecCarElectricityDemandInGWh = elecCarRunKM * \
-            self.KWhPerKMElecCar / 1e6
+            self.KWhPerKMElecCar / 1000000
 
         oilBoilerFuelDemand = self.totalHeatDemand * oilBoilerHeatPercentage \
             / self.oilBoilerEfficiency
@@ -192,15 +193,15 @@ class GiudicarieEsteriori(BaseModel):
 
         self.energyplan.run(
             inputs=[{
-                "input_RES1_capacity": pv[i],
+                "input_RES1_capacity": int(pv[i]),
                 "input_fuel_Households[2]": oilBoilerFuelDemand[i],
                 "input_fuel_Households[3]": LPGBoilerDemand[i],
                 "input_fuel_Households[4]": biogasBoilerDemand[i],
                 "input_HH_BioCHP_heat": bioCHPDemand[i],
                 "input_HH_HP_heat": HPDemand[i],
                 "input_transport_TWh": elecCarElectricityDemandInGWh[i],
-                "input_fuel_Transport[2]": reducedDieselDemandInGWh[i],
-                "input_fuel_Transport[5]": reducedPetrolDemandInGWh[i],
+                "input_fuel_Transport[2]": "{:.2f}".format(reducedDieselDemandInGWh[i]),
+                "input_fuel_Transport[5]": "{:.2f}".format(reducedPetrolDemandInGWh[i]),
                 "Filnavn_transport": "CIVIS_Transport_NC.txt"
             } for i in range(x.shape[0])]
         )
@@ -226,22 +227,23 @@ class GiudicarieEsteriori(BaseModel):
             )
 
         # Retrieve:
-        CO2 = 0  # annual CO2 emissions
-        VAR_COST = 1  # annual variable costs
-        FIX_COST = 2  # annual fixed costs
-        INV_COST = 3  # annual investment costs
-        PV = 3  # annual PV electricity
-        HYDRO = 4  # annual hydropower
-        WAVE = 5  # annual wave power
-        IMPORT = 6  # annual import
-        EXPORT = 7  # annual export
-        HP = 8  # annual HP electricity
-        HH_CHP = 9  # annual HH electricity CHP
-        DEMAND = 10  # annual demand
-        NGAS = 11  # annual natural gas
-        OIL = 12  # annual oil
-        BIOMASS = 13  # annual biomass
-        FLEXI = 14  # annual flexible demand
+        CO2 = 0         # annual CO2 emissions
+        VAR_COST = 1    # annual variable costs
+        FIX_COST = 2    # annual fixed costs
+        INV_COST = 3    # annual investment costs
+        HYDRO = 4       # annual hydropower
+        PV = 5          # annual PV electricity
+        WAVE = 6        # annual wave power
+        IMPORT = 7      # annual import
+        EXPORT = 8      # annual export
+        HH_CHP = 9      # annual HH electricity CHP
+
+        HP = 10         # annual HP electricity
+        DEMAND = 11     # annual demand
+        NGAS = 12       # annual natural gas
+        OIL = 13        # annual oil
+        BIOMASS = 14    # annual biomass
+        FLEXI = 15      # annual flexible demand
 
         totalAdditionalCost = ((
             z[:, HYDRO] + z[:, PV] + z[:, HH_CHP] + z[:, IMPORT] - z[:, EXPORT]
