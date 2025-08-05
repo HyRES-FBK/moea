@@ -13,14 +13,12 @@ class BaseAlgorithm(NSGA2):
                  crossover=SBX(eta=10, prob=0.9),
                  mutation=PM(eta=10, prob=1/7),
                  survival=RankAndCrowding(),
-                 sampling=None,
                  **kwargs):
         super().__init__(
             pop_size=pop_size,
             crossover=crossover,
             mutation=mutation,
             survival=survival,
-            sampling=sampling,
             **kwargs)
 
     def __str__(self) -> str:

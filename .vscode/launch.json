@@ -77,11 +77,11 @@
                 "run",
                 "base_algorithm",
                 "vdn",
-                "VdN_SH_2020_Opt_Scenario_2DS_El_mob.txt",
+                "VdN SH Eleboration/VdN_SH_2020_Opt_Scenario_2DS_El_mob.txt",
                 "--pop-size",
                 "5",
                 "--n-gen",
-                "2"
+                "2",
             ]
         },
         {
@@ -93,7 +93,7 @@
                 "run",
                 "mahbub2016",
                 "vdn",
-                "VdN_SH_2020_Opt_Scenario_2DS_El_mob.txt",
+                "VdN SH Eleboration/VdN_SH_2020_Opt_Scenario_2DS_El_mob.txt",
                 "--pop-size",
                 "5",
                 "--n-gen",
@@ -109,7 +109,7 @@
                 "run",
                 "mahbub2016",
                 "vdn",
-                "VdN_SH_2020_Opt_Scenario_2DS_El_mob.txt",
+                "VdN SH Eleboration/VdN_SH_2020_Opt_Scenario_2DS_El_mob.txt",
                 "--pop-size",
                 "5",
                 "--n-gen",

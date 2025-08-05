@@ -35,21 +35,22 @@ class ValDiNon(BaseModel):
     energyplan_version = EnergyPLAN123
 
     def __init__(self,
-                 year: int,
+                 year: int | None = None,
                  scenario: dict | None = None,
-                 data_file: Union[str, Path] = "VdN_2008.txt",
+                 data_file: str | Path | None = None,
                  **kwargs):
         """
+        If function parameters are not specified, the model is set to the 2020
+        scenario.
+
         Parameters:
         -----------
         - ``year``: int
-
             The year of the scenario.
-
         - ``scenario``: dict
-
-            A dictionary containing the scenario data. The dictionary should
-            have the following keys:
+            A dictionary containing the scenario data used in the `_evaluate`
+            method.
+            The dictionary should have the following keys:
                 - ``totalHeatDemand`` in GWh;
                 - ``efficiencyConCar`` in KWh/km;
                 - ``efficiencyEVCar`` in KWh/km divided by 0.85, which is
@@ -67,7 +68,6 @@ class ValDiNon(BaseModel):
                 - ``additionalCostPerGWhinKEuro``.
 
         - ``data_file``: str or Path
-
             The path to the input file. This file is used as a template to
             generate the input files for each individual.
             The values will be replaced by the values of the decision variables
@@ -101,14 +101,26 @@ class ValDiNon(BaseModel):
 
         # Store the year
         self.year = year
+        if self.year is None:
+            self.year = 2020
         # Set the scenario
         self.scenario = scenario
-
         # If no scenario is provided, use the default one
         if self.scenario is None:
-            logger.info(f"No scenario provided. Use {data_file}.")
-            self.scenario = pd.read_csv('docs/use-cases/vdn-scenarios.csv',
-                                        index_col=0)["2020"].to_dict()
+            scenario_data_file = Path('docs/use-cases/vdn-scenarios.csv')
+            logger.warning(f"No scenario provided. Try to use year {self.year}"
+                           f" scenario from {scenario_data_file}.")
+            if not scenario_data_file.exists():
+                logger.error("No scenario provided and file with scenario "
+                             "data not found.")
+            self.scenario = pd.read_csv(scenario_data_file, index_col=0)
+            if self.year not in self.scenario:
+                logger.error(f"Yesr {self.year} not found in "
+                             f"{scenario_data_file}.")
+            self.scenario = self.scenario[str(self.year)].to_dict()
+            logger.success(f"Found scenario data for the year {self.year}.")
+        if data_file is None:
+            data_file = f"VdN SH Eleboration/VdN_SH_{self.year}_Opt_Scenario_2DS_El_mob.txt"
 
         # Initialize the parent class
         super().__init__(
@@ -127,33 +139,19 @@ class ValDiNon(BaseModel):
         The objective function and constraints are evaluated here. The
         objective function evaluation consists of a call to EnergyPLAN.
         """
-        # Use index naming
-        PV = 0
-        OIL = 1
-        NGAS = 2
-        BIOMASS = 3
-        MICROCHP = 4
-        EV = 5
-        OILSOLAR = 6
-        NGASSOLAR = 7
-        BIOMASSSOLAR = 8
-        MICROCHPSOLAR = 9
-        HEATSOLAR = 10
-
         # Heat percentages
-        heatPercentages = np.sort(x.T[OIL:EV], axis=1)
+        heatPercentages = np.copy(x[:, 1:5])
 
-        oilBoilerPercentage = heatPercentages[OIL - 1]
-        nGasBoilerPercentage = heatPercentages[NGAS - 1] - \
-            heatPercentages[OIL - 1]
-        biomassBoilerPercentage = heatPercentages[BIOMASS - 1] - \
-            heatPercentages[NGAS - 1]
-        biomassMicroCHPPercentage = heatPercentages[MICROCHP - 1] - \
-            heatPercentages[BIOMASS - 1]
-        heatPumpPercentage = 1 - heatPercentages[MICROCHP - 1]
+        heatPercentages = np.sort(heatPercentages, axis=1)
+
+        oilBoilerPercentage = heatPercentages[:, 0]
+        nGasBoilerPercentage = heatPercentages[:, 1] - heatPercentages[:, 0]
+        biomassBoilerPercentage = heatPercentages[:, 2] - heatPercentages[:, 1]
+        biomassMicroCHPPercentage = heatPercentages[:, 3] - heatPercentages[:, 2]
+        heatPumpPercentage = 1 - heatPercentages[:, 3]
 
         # Electric car percentage
-        EVCarPercentage = x.T[EV]
+        EVCarPercentage = x[:, 5]
         conCarpercentage = 1 - EVCarPercentage
 
         totalKMRunByConCar = (self.scenario["totalKMRunByCars"] *
@@ -167,11 +165,11 @@ class ValDiNon(BaseModel):
             self.scenario["efficiencyEVCar"] / 1e6
 
         # Solar thermal percentages
-        oilSolarPercentage = x.T[OILSOLAR]
-        nGasSolarPercentage = x.T[NGASSOLAR]
-        biomassSolarPercentage = x.T[BIOMASSSOLAR]
-        microCHPSolarPercentage = x.T[MICROCHPSOLAR]
-        hpSolarPercentage = x.T[HEATSOLAR]
+        oilSolarPercentage = x[:, 6]
+        nGasSolarPercentage = x[:, 7]
+        biomassSolarPercentage = x[:, 8]
+        microCHPSolarPercentage = x[:, 9]
+        hpSolarPercentage = x[:, 10]
 
         # Fuel demand for oil boiler
         oilBoilerFuelDemand = oilBoilerPercentage * \
@@ -193,15 +191,14 @@ class ValDiNon(BaseModel):
             biomassSolarPercentage
 
         # Fuel demand for biomass microCHP
-        biomassMicroCHPFuelDemand = biomassMicroCHPPercentage * \
+        biomassMicroCHPHeatDemand = biomassMicroCHPPercentage * \
             self.scenario["totalHeatDemand"]
-        biomassMicroCHPSolarThermal = biomassMicroCHPFuelDemand * \
+        biomassMicroCHPSolarThermal = biomassMicroCHPHeatDemand * \
             microCHPSolarPercentage * self.scenario["efficiencyBiomassCHP"]
 
         # Fuel demand for heat pump
-        heatPumpFuelDemand = heatPumpPercentage * \
+        heatPumpHeatDemand = heatPumpPercentage * \
             self.scenario["totalHeatDemand"]
-        # TODO: Check if this is correct
         heatPumpSolarThermal = heatPumpPercentage * hpSolarPercentage * \
             self.scenario["totalHeatDemand"]
 
@@ -217,16 +214,16 @@ class ValDiNon(BaseModel):
         self.energyplan.run(
             inputs=[
                 {
-                    "input_RES1_capacity": x[i, PV].astype(int),
+                    "input_RES1_capacity": x[i, 0].astype(int),
                     "input_fuel_Households[2]": oilBoilerFuelDemand[i],
                     "input_HH_oilboiler_Solar": oilSolarThermal[i],
                     "input_fuel_Households[3]": nGasBoilerFuelDemand[i],
                     "input_HH_ngasboiler_Solar": nGasSolarThermal[i],
                     "input_fuel_Households[4]": biomassBoilerFuelDemand[i],
                     "input_HH_bioboiler_Solar": biomassBoilerSolarThermal[i],
-                    "input_HH_BioCHP_heat": biomassMicroCHPFuelDemand[i],
-                    "input_HH_bioCHP_solar": biomassMicroCHPSolarThermal[i],
-                    "input_HH_HP_heat": heatPumpFuelDemand[i],
+                    "input_HH_BioCHP_heat": biomassMicroCHPHeatDemand[i],
+                    "input_HH_BioCHP_solar": biomassMicroCHPSolarThermal[i],
+                    "input_HH_HP_heat": heatPumpHeatDemand[i],
                     "input_HH_HP_solar": heatPumpSolarThermal[i],
                     "input_fuel_Transport[5]": totalDieselDemandInGWhForTrns[i],
                     "Input_Size_transport_conventional_cars": numberOfConCars[i],
@@ -249,41 +246,41 @@ class ValDiNon(BaseModel):
             ("Annual", "Export Electr."),
             ("Annual", "HH-CHP Electr."),
             "Biomass Consumption"
-        ).T
+        )
 
         # Retrieve:
-        CO2 = 0  # local CO2 emissions
-        VAR_COST = 1  # total variable cost
-        FIX_COST = 2  # fixed operational cost
-        INV_COST = 3  # investment cost
-        PV = 4  # annual PV electricity
-        HYDRO = 5  # annual hydropower
-        IMPORT = 6  # annual import
-        EXPORT = 7  # annual export
-        HH_CHP = 8  # annual HH electricity CHP
-        BIOMASS = 9  # annual biomass consumption
+        CO2 = 0         # local CO2 emissions
+        VAR_COST = 1    # total variable cost
+        FIX_COST = 2    # fixed operational cost
+        INV_COST = 3    # investment cost
+        HYDRO = 4       # annual hydropower
+        PV = 5          # annual PV electricity
+        IMPORT = 6      # annual import
+        EXPORT = 7      # annual export
+        HH_CHP = 8      # annual HH electricity CHP
+        BIOMASS = 9     # annual biomass consumption
 
         # Compute the first objective: local CO2 emissions
 
         # Breakdown import electricity cost
-        co2InImportedEleCoal = z[IMPORT] * self.scenario["coalShare"] / \
+        co2InImportedEleCoal = z[:, IMPORT] * self.scenario["coalShare"] / \
             100 * self.scenario["co2Coal"] * 3600 / 1e6
-        co2InImportedEleOil = z[IMPORT] * self.scenario["oilShare"] / \
+        co2InImportedEleOil = z[:, IMPORT] * self.scenario["oilShare"] / \
             100 * self.scenario["co2Oil"] * 3600 / 1e6
-        co2InImportedEleNGas = z[IMPORT] * self.scenario["nGasShare"] / \
+        co2InImportedEleNGas = z[:, IMPORT] * self.scenario["nGasShare"] / \
             100 * self.scenario["co2NGas"] * 3600 / 1e6
 
         # Calculate local CO2 emissions
-        locaCO2Emission = z[CO2] + co2InImportedEleCoal + \
+        locaCO2Emission = z[:, CO2] + co2InImportedEleCoal + \
             co2InImportedEleOil + co2InImportedEleNGas
 
         # Compute the second objective: additional cost
 
-        totalAdditionalCost = (z[HYDRO] + z[PV] + z[IMPORT] - z[EXPORT] + \
-                               z[HH_CHP]) * \
-            self.scenario["additionalCostPerGWhinKEuro"]
+        totalAdditionalCost = \
+            (z[:, HYDRO] + z[:, PV] + z[:, IMPORT] - z[:, EXPORT] + \
+             z[:, HH_CHP]) * self.scenario["additionalCostPerGWhinKEuro"]
 
-        actualAnnualCost = z[VAR_COST] + z[FIX_COST] + z[INV_COST] + \
+        actualAnnualCost = z[:, VAR_COST] + z[:, FIX_COST] + z[:, INV_COST] + \
             totalAdditionalCost
 
         # Set objectives
@@ -292,5 +289,5 @@ class ValDiNon(BaseModel):
         # CONSTRAINTS
 
         out["G"] = np.column_stack([
-            z[BIOMASS] - 98.84,
+            z[:, BIOMASS] - 98.84,
         ])
