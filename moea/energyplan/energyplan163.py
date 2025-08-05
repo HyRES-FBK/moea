@@ -1,5 +1,4 @@
 from pathlib import Path
-from numpy import ndarray
 from functools import lru_cache
 from moea.energyplan.energyplan_splool import EnergyPLANSpool
 from moea.config import ENERGYPLAN163
@@ -11,13 +10,12 @@ class EnergyPLAN163(EnergyPLANSpool):
 
     def __init__(self,
                  energyplan_data_file: str | Path,
-                 input_names: list[str]
                  ) -> None:
-        super().__init__(energyplan_data_file, input_names)
+        super().__init__(energyplan_data_file)
 
     @lru_cache(maxsize=None)
     def _find_position(self, file_path: str | Path, key: str
-                      ) -> tuple[int, int] | None:
+                       ) -> tuple[int, int] | None:
         """
         Return the line number of a specific key in a file.
         """
@@ -27,7 +25,7 @@ class EnergyPLAN163(EnergyPLANSpool):
         while i < 80:
             line = next(file)
             # If the key is a tuple, then continue
-            if type(key) == tuple:
+            if type(key) is tuple:
                 i += 1
                 continue
             # Read the line and split it by tabs
@@ -37,6 +35,10 @@ class EnergyPLAN163(EnergyPLANSpool):
                     file.close()
                     return i, j + 1
             i += 1
+        if type(key) is str:
+            raise ValueError(
+                f"The key {key} could not be found."
+            )
         # Read lines 81 and 82
         ln1 = next(file).split('\t')
         ln2 = next(file).split('\t')

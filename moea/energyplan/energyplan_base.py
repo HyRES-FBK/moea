@@ -121,7 +121,7 @@ class EnergyPLANBase:
         """
         command = [str(self.energyplan_exe),
                    "-i", str(self.spool_folder / f"input{i}.txt"),
-                   "-ascii", str(self.results_folder/ f"output{i}.txt")]
+                   "-ascii", str(self.results_folder / f"output{i}.txt")]
         subprocess.run(command, check=True)
 
     @abstractmethod

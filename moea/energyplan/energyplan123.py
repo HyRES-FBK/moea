@@ -1,4 +1,3 @@
-import numpy as np
 from pathlib import Path
 
 from moea.config import ENERGYPLAN123

@@ -1,10 +1,9 @@
 import subprocess
 import numpy as np
 import pandas as pd
-from typing import Union, List, Tuple
+from typing import Union, List
 from pathlib import Path
 
-from functools import lru_cache
 
 ENERGYPLAN_EXE = "."
 ENERGYPLAN_SPOOL = "spool"
@@ -67,7 +66,7 @@ def solow_polasky_diversification(X: np.ndarray,
             v = - r.T @ Qinv @ r
             W = Qinv @ r
             phi = np.sum(W)
-            sp[j] = (1 / v) * np.pow(phi -1, 2)
+            sp[j] = (1 / v) * np.pow(phi - 1, 2)
         # Move the individual with the highest diversity contribution to the
         # selected population
         Xp = np.vstack((Xp, X[np.argmax(sp)]))
@@ -237,169 +236,6 @@ def parse_input(input_file: Union[str, Path]) -> dict:
             break
         data[rows[i].strip().replace('=', '')] = rows[i + 1].strip()
     return data
-
-
-@lru_cache(maxsize=None)
-def find_position(file_path: Union[str, Path], key: str) -> Tuple[int, int]:
-    """
-    Return the line number of a specific key in a file.
-    """
-    # Open the file and read line by line
-    file = open(file_path, 'r', encoding='windows-1252')
-    i = 0
-    while i < 80:
-        line = next(file)
-        # If the key is a tuple, then continue
-        if type(key) == tuple:
-            i += 1
-            continue
-        # Read the line and split it by tabs
-        line = [ln.strip() for ln in line.split('\t')]
-        for j, col in enumerate(line):
-            if key in col:
-                file.close()
-                return i, j + 1
-        i += 1
-    # Read lines 81 and 82
-    ln1 = next(file).split('\t')
-    ln2 = next(file).split('\t')
-    i += 2
-    # Create keys by joining the two lines
-    keys = [f"{ln1[i].strip()} {ln2[i].strip()}" for i in range(len(ln1))]
-    # Find the column index
-    for j, k in enumerate(keys):
-        if key[1] == k:
-            break
-
-    if j == len(keys) - 1:
-        file.close()
-        raise ValueError(
-            f"Colunm '{key[1]}' not found in in the list of columns {keys}"
-        )
-
-    # Look for the row index, after row 104 there are hourly values
-    while i < 104:
-        line = next(file)
-        if key[0] in line:
-            file.close()
-            return i, j
-        i += 1
-
-    if not file.closed:
-        file.close()
-
-
-@lru_cache(maxsize=None)
-def find_positions(file_path: Union[str, Path], *keys: str) -> np.ndarray:
-    """
-    Return an array with row and column positions for a list of keys.
-    """
-    positions = []
-    for key in keys:
-        positions.append(find_position(file_path, key))
-    return np.stack(positions)
-
-
-def find_objectives(file_path: Union[str, Path], *keys: Union[str, tuple]
-                    ) -> np.ndarray:
-    """
-    Find the value of a key in a file. The value is assumed to be in the line
-    immediately after the key.
-    """
-    idxs = find_positions(file_path, *keys)
-    values = []
-    with open(file_path, 'r', encoding='windows-1252') as f:
-        lines = f.readlines()
-        for i, j in idxs:
-            values.append(
-                float(lines[i].split('\t')[j].strip().replace(',', '.'))
-            )
-    return np.array(values)
-
-
-def find_values(results_folder: Union[str, Path], *keys: Union[str, tuple]
-                ) -> np.ndarray:
-    values = []
-    files = list(results_folder.glob('*.txt'))
-    for i in range(len(files)):
-        values.append(
-            find_objectives(results_folder / f'input{i}.txt.txt', *keys)
-        )
-    return np.vstack(values)
-
-
-def clean_results_folder() -> None:
-    """
-    Clean the results folder.
-    """
-    for file in ENERGYPLAN_RESULTS.glob('*.txt'):
-        file.unlink()
-
-
-def dump_input(input_dict: dict, i: int, data: dict,
-               destination: Union[str, Path] = ENERGYPLAN_SPOOL,
-               clean_folder: bool = True) -> None:
-    """
-    Dump the input vector to a file using EnergyPLAN syntax.
-
-    Parameters
-    ----------
-    ``input_dict`` : dict
-
-        The dictionary containing the decision variables.
-
-    ``i`` : int
-
-        An id for the input file to be dumped.
-
-    ``destination`` : str or Path
-
-        The folder where the input file will be saved.
-
-    ``clean_folder`` : bool
-
-        If True, the folder will be cleaned before dumping the input file.
-
-    """
-    # Check if the destination is a Path object
-    if not isinstance(destination, Path):
-        destination = Path(destination)
-    # Substitute the values in the data dictionary
-    for k, v in input_dict.items():
-        data[k] = v
-    # Dump input file
-    with open(destination / f"input{i}.txt", 'w', encoding='utf-16') as f:
-        # Write header with EnergyPLAN version
-        f.write("EnergyPLAN version\n698\n")
-        for k, v in data.items():
-            if k == 'EnergyPLAN version':
-                continue
-            f.write(f"{k}=\n{v}\n")
-    # Clean the results folder
-    if clean_folder:
-        clean_results_folder()
-
-
-def setup_spool_folder() -> None:
-    """
-    Check existence and clean the spool folder.
-    """
-    # Check existence of the spool folder
-    ENERGYPLAN_SPOOL.mkdir(parents=True, exist_ok=True)
-    # Clean the spool folder
-    for file in ENERGYPLAN_SPOOL.glob('*.txt'):
-        file.unlink()
-
-
-def setup_results_folder() -> None:
-    """
-    Check existence and clean the results folder.
-    """
-    # Check existence of the results folder
-    ENERGYPLAN_RESULTS.mkdir(parents=True, exist_ok=True)
-    # Clean the results folder
-    for file in ENERGYPLAN_RESULTS.glob('*.txt'):
-        file.unlink()
 
 
 if __name__ == "__main__":
