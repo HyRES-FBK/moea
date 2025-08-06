@@ -32,8 +32,10 @@ class EnergyPLAN163(EnergyPLANSpool):
             line = [ln.strip() for ln in line.split('\t')]
             for j, col in enumerate(line):
                 if key in col:
-                    file.close()
-                    return i, j + 1
+                    for k in range(j + 1, len(line)):
+                        if line[k].strip() != "":
+                            file.close()
+                            return i, k
             i += 1
         if type(key) is str:
             raise ValueError(
