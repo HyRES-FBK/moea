@@ -21,6 +21,22 @@
             ]
         },
         {
+            "name": "CEIS2021 - NSGAII",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "moea.cli",
+            "args": [
+                "run",
+                "nsga-ii",
+                "ceis2021",
+                "CEIS_2030_BAU.txt",
+                "--pop-size",
+                "5",
+                "--n-gen",
+                "2"
+            ]
+        },
+        {
             "name": "Aalborg - NSGAII",
             "type": "debugpy",
             "request": "launch",
