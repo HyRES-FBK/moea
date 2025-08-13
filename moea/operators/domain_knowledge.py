@@ -3,7 +3,6 @@ from typing import Union, List
 
 from pymoo.core.sampling import Sampling
 from pymoo.core.mutation import Mutation
-from pymoo.core.callback import Callback
 from pymoo.core.variable import get, Real
 from pymoo.operators.mutation.pm import mut_pm
 from pymoo.operators.crossover.binx import mut_binomial
@@ -276,8 +275,9 @@ class DomainKnowledgeMutation(Mutation):
             "The termination criterion must be MaximumGenerationTermination."
 
         # Modify the mutation probability
-        prob_var = np.repeat(1 - kwargs["algorithm"].n_gen /
-                             kwargs["algorithm"].termination.n_max_gen, len(X))
+        prob_var = np.repeat(
+            1 - kwargs["algorithm"].n_gen /
+            kwargs["algorithm"].termination.n_max_gen, len(X))
 
         # Create a three way split of the decision variables
         mask = np.random.choice([0, 1, 2], size=X.shape[0])

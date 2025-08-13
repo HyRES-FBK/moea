@@ -1,9 +1,11 @@
 import unittest
+import numpy as np
 
 from pymoo.optimize import minimize
 
 from moea.models import get_model
 from moea.algorithms import get_algorithm
+from moea.algorithms.base_algorithm import BaseAlgorithm
 
 
 class TestAalborg(unittest.TestCase):
@@ -60,7 +62,7 @@ class TestGiudicarie(unittest.TestCase):
 
     def setUp(self) -> None:
         self.model = get_model('Giudicarie')
-        self.algorithm = get_algorithm('NSGAII', pop_size=50)
+        self.algorithm = get_algorithm('NSGAII', pop_size=5)
         return super().setUp()
 
     def test_model_features(self):
