@@ -5,6 +5,38 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Riva - NSGAII",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "moea.cli",
+            "args": [
+                "run",
+                "nsga-ii",
+                "riva",
+                "Riva_future1.txt",
+                "--pop-size",
+                "5",
+                "--n-gen",
+                "2"
+            ]
+        },
+        {
+            "name": "CEIS2021 - NSGAII",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "moea.cli",
+            "args": [
+                "run",
+                "nsga-ii",
+                "ceis2021",
+                "CEIS_2030_BAU.txt",
+                "--pop-size",
+                "5",
+                "--n-gen",
+                "2"
+            ]
+        },
+        {
             "name": "Aalborg - NSGAII",
             "type": "debugpy",
             "request": "launch",
@@ -45,9 +77,9 @@
                 "run",
                 "mahbub2016",
                 "giudicarie",
-                "CEISCompleteCurrent.txt",
+                "CEIS_Complete_Current.txt",
                 "--pop-size",
-                "5",
+                "3",
                 "--n-gen",
                 "5"
             ]
@@ -61,11 +93,11 @@
                 "run",
                 "base_algorithm",
                 "vdn",
-                "VdN_SH_2020_Opt_Scenario_2DS_El_mob.txt",
+                "VdN SH Eleboration/VdN_SH_2020_Opt_Scenario_2DS_El_mob.txt",
                 "--pop-size",
                 "5",
                 "--n-gen",
-                "2"
+                "2",
             ]
         },
         {
@@ -77,7 +109,7 @@
                 "run",
                 "mahbub2016",
                 "vdn",
-                "VdN_SH_2020_Opt_Scenario_2DS_El_mob.txt",
+                "VdN SH Eleboration/VdN_SH_2020_Opt_Scenario_2DS_El_mob.txt",
                 "--pop-size",
                 "5",
                 "--n-gen",
@@ -93,7 +125,7 @@
                 "run",
                 "mahbub2016",
                 "vdn",
-                "VdN_SH_2020_Opt_Scenario_2DS_El_mob.txt",
+                "VdN SH Eleboration/VdN_SH_2020_Opt_Scenario_2DS_El_mob.txt",
                 "--pop-size",
                 "5",
                 "--n-gen",

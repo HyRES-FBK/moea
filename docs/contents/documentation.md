@@ -6,7 +6,7 @@
 
 ### Aalborg model
 
-::: moea.models.aalborg.AalborgA
+::: moea.models.aalborg.Aalborg
 
 ## The ``BaseAlgorithm`` class
 

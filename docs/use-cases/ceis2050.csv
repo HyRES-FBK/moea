@@ -1,0 +1,40 @@
+name,lb,ub,category
+input_RES3_capacity,0,4732,Renewable
+input_RES2_capacity,0,41845,Renewable
+input_RES1_capacity,0,350,Renewable
+input_cap_pump_el,0,13140,El Storage 1
+input_cap_turbine_el,0,13140,El Storage 1
+input_storage_pump_cap,0,13140,El Storage 1
+input_H2storage_trans_cap,0,13140,H2 Storage
+input_cap_pump_el2,0,12528,El Storage 2
+input_cap_turbine_el2,0,8836,El Storage 2
+input_storage_pump_cap2,0,13140,El Storage 2
+input_fuel_Households[1],0,30.391,Heat demand
+input_fuel_Households[2],0,30.391,Heat demand
+input_fuel_Households[3],0,30.391,Heat demand
+input_fuel_Households[4],0,11.568,Heat demand
+input_HH_H2CHP_heat,0,30.391,Heat demand
+input_HH_NgasCHP_heat,0,30.391,Heat demand
+input_HH_BioCHP_heat,0,30.391,Heat demand
+input_HH_HP_heat,0,30.391,Heat demand
+input_HH_coalboiler_Solar,0,1.0,Solar Thermal
+input_HH_oilboiler_Solar,0,1.0,Solar Thermal
+input_HH_ngasboiler_Solar,0,1.0,Solar Thermal
+input_HH_bioboiler_Solar,0,1.0,Solar Thermal
+input_HH_H2CHP_solar,0,1.0,Solar Thermal
+input_HH_NgasCHP_solar,0,1.0,Solar Thermal
+input_HH_BioCHP_solar,0,1.0,Solar Thermal
+input_HH_HP_solar,0,1.0,Solar Thermal
+Input_HH_coalboiler_Storage,0,366,Solar storage
+Input_HH_oilboiler_Storage,0,366,Solar storage
+Input_HH_Ngasboiler_Storage,0,366,Solar storage
+Input_HH_Bioboiler_Storage,0,366,Solar storage
+input_HH_H2CHP_storage,0,366,Solar storage
+input_HH_NgasCHP_storage,0,366,Solar storage
+input_HH_BioCHP_storage,0,366,Solar storage
+input_HH_HP_storage,0,366,Solar storage
+input_fuel_Transport[2],1,137674000,Transport
+Input_Size_transport_conventional_cars,1,137674000,Transport
+input_transport_TWh,1,137674000,Transport
+Input_Size_transport_electric_cars,1,137674000,Transport
+input_fuel_Transport[6],1,137674000,Transport

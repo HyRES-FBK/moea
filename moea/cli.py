@@ -5,7 +5,6 @@ from loguru import logger
 
 from pymoo.optimize import minimize
 
-from moea.config import ENERGYPLAN_DATA_DIR
 from moea.models import get_model
 from moea.algorithms import get_algorithm
 
@@ -34,15 +33,33 @@ def version():
     typer.echo(f"MOEA {find_version('pyproject.toml')}")
 
 
+@app.command()
+def list_models():
+    """List the available models."""
+    from moea.models import MODELS
+    print("Available models:")
+    for model in list(set(MODELS.keys())):
+        print("-", model)
+
+
+@app.command()
+def list_algorithms():
+    """List the available algorithms."""
+    from moea.algorithms import ALGORITHMS
+    print("Available algorithms:")
+    for model in list(set(ALGORITHMS.keys())):
+        print("-", model)
+
+
 # Add more commands as needed
 @app.command()
 def run(
     algorithm: str = typer.Argument(
         default="NSGA-II",
         help="The optimization algorithm."),
-    model: str = typer.Argument(
+    model_name: str = typer.Argument(
         default="",
-        help="The model to be optimized."),
+        help="The name of the model to be optimized."),
     data_file: str = typer.Argument(
         default="",
         help="The reference data file in ``EnergyPLAN Data/Data`` folder."),
@@ -51,26 +68,21 @@ def run(
         help="The population size."),
     n_gen: int = typer.Option(
         default=100,
-        help="The number of generations used as stopping criterion.")
+        help="The number of generations used as stopping criterion."),
+    year: int = typer.Option(
+        default=None,
+        help="The reference year for case studies that requires it."
+    )
 ):
     """
     Run the optimization algorithm.
     """
-    # TODO: Check if the data file is in ANSI format
-
-    # Data file is in EnergyPLAN Data folder
-    data_file = ENERGYPLAN_DATA_DIR / data_file
-
-    # Import the model dynamically
-    if not data_file.exists():
-        problem = get_model(model, data_file)
-    else:
-        problem = get_model(model)
+    problem = get_model(name=model_name, data_file=data_file, year=year)
 
     # Import the algorithm dynamically
-    algorithm = get_algorithm(algorithm, pop_size=pop_size)
+    algorithm = get_algorithm(name=algorithm, pop_size=pop_size)
 
-    logger.info(f"Running {algorithm} on {model}.")
+    logger.info(f"Running {algorithm} on {model_name}.")
 
     res = minimize(
         problem=problem,
@@ -83,7 +95,7 @@ def run(
     logger.info("Optimization finished.")
 
     # Save the results
-    with open(f"results_{model}_{algorithm}.pkl", "wb") as f:
+    with open(f"results_{model_name}_{algorithm}.pkl", "wb") as f:
         pickle.dump(res, f)
 
     logger.info("Results saved.")
