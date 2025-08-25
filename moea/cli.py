@@ -33,6 +33,24 @@ def version():
     typer.echo(f"MOEA {find_version('pyproject.toml')}")
 
 
+@app.command()
+def list_models():
+    """List the available models."""
+    from moea.models import MODELS
+    print("Available models:")
+    for model in list(set(MODELS.keys())):
+        print("-", model)
+
+
+@app.command()
+def list_algorithms():
+    """List the available algorithms."""
+    from moea.algorithms import ALGORITHMS
+    print("Available algorithms:")
+    for model in list(set(ALGORITHMS.keys())):
+        print("-", model)
+
+
 # Add more commands as needed
 @app.command()
 def run(
