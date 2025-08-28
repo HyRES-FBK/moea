@@ -1,6 +1,6 @@
 from pathlib import Path
 from functools import lru_cache
-from moea.energyplan.energyplan_splool import EnergyPLANSpool
+from moea.energyplan.energyplan_spool import EnergyPLANSpool
 from moea.config import ENERGYPLAN163
 
 
