@@ -1,4 +1,4 @@
-# :dna: MOEA for Energy Scenario Optimization
+# 🧬 MOEA for Energy Scenario Optimization
 
 <a target="_blank" href="https://cookiecutter-data-science.drivendata.org/">
     <img src="https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter" />
@@ -14,7 +14,7 @@ pre- and post-processing of data for energy modelling and optimization.
 For further details about the code, check the complete
 [documentation](https://hyres-fbk.github.io/moea/).
 
-## :page_with_curl: Requirements
+## 📃 Requirements
 
 The MOEA package works only in Windows because EnergyPLAN runs only in Windows.
 
@@ -33,22 +33,22 @@ a Python environment.
 Conda is availabale both through [Anaconda](https://www.anaconda.com/download)
 or [Miniconda](https://docs.anaconda.com/miniconda/install/).
 
-## :rocket: Quickstart
+## 🚀 Quickstart
 
-To get started, create a conda environment via
+1. Clone the repository using [`git`](https://git-scm.com/)
+1. Locate in the project folder using a terminal
+1. Create the Python virtual environment with all required dependencies, e.g.,
+using [`uv`](https://docs.astral.sh/uv/getting-started/installation/) with
 
-```bash
-cd <MOEA-project-folder>
-conda env create -f environment.yml
+```ps
+uv sync
 ```
 
-and remember to activate it using the command
+**REMEMBER** either to activate the virtual environment, or to prepend
+`uv run` to all commands that you will type in the terminal (suggested).
 
-```bash
-conda activate moea
-```
 
-### :movie_camera: Scenario generation
+### 🎥 Scenario generation
 
 Setup of an experiment is carried out in EnergyPLAN, which provides a handy GUI.
 When a scenario has been configured, experimental parameters are stored in a
@@ -59,18 +59,20 @@ the parameters in the input file.
 The algorithms will change only the variables declared in the model,
 leaving all the others unchanged.
 
-### :sparkles: Model definition
+### ✨ Model definition
 
 The word *model* is used to indicate the problem to be optimized.
 This means that:
 
-1. Problem variables are declared within the model. They do not necessarily
-have to map to an EnergyPLAN input value, they can also be calculated starting
-from EnergyPLAN inputs.
-2. Objective function values are declared in a model and they can either be
-EnergyPLAN output values, or they can result from postprocessing of EnergyPLAN
-solution values.
-3. Constraints are declared in the model file.
+1. Problem variables are declared within the model. Model variables do not
+necessarily have to map to EnergyPLAN input names, they can be anything that
+fits your needs. However, decision variables need to be mapped to EnergyPLAN
+input variables before running a simulation in EnergyPLAN.
+2. Objective function values are declared in the `_evaluate` method of a model
+object, and they can be EnergyPLAN output values, or they the result from
+postprocessing of EnergyPLAN solution values.
+3. Constraints are declared in the `_evaluate` method of a model using
+`out["H"]` and `out["G"]` for equality and inequality constraints.
 
 It is good practice to store models in the folder ``moea/models``.
 To create a new model, declare a new class that inherits from the ``BaseModel``
@@ -83,7 +85,7 @@ When a new model is created, to make it available to the function
 ``get_model``, it must be added to the list of models in the ``__init__.py``
 file of the ``models`` package.
 
-### :toolbox: Algorithm definition
+### 🧰 Algorithm definition
 
 Custom algorithms can be defined by the user.
 New algorithms can inherit from existing algorithms and modify only specific
@@ -98,40 +100,42 @@ When a new algorithm is created, to make it available to the function
 ``get_algorithm``, it must be added to the list of models in the
 ``__init__.py`` file of the ``algorithms`` package.
 
-### :man_biking: Run an MOEA algorithm
+### 🚴‍♂️ Run an MOEA algorithm
 
-If the Python environment was created without errors, the application ``moea``
+If the Python environment was created without errors, the application `moea`
 should be accessible from the command line when the environment is active.
 
-A minimal guide to the use of ``moea`` is available via
+A minimal guide to the use of `moea` is available via (assuming that you are using `uv`)
 
 ```bash
-moea --help
+uv run moea --help
 ```
 
 and help for each of the command can be consulted using
 
 ```bash
-moea COMMAND --help
+uv run moea COMMAND --help
 ```
 
-The ``run`` command requires three (mandatory) arguments
+Perhaps, the most useful command of `moea` is the `run` command, which has not
+to be confused with the `uv run` command to prepend to any terminal command.
+The `run` command requires three (mandatory) arguments
 
 1. the name of the algorithm, which must correspond to the name of the
 algorithm class,
 2. the name of the model to be optimized, which must correspond to the name
 of the model class, and
 3. the name of the file containing the parameters for a scenario
-(w/o the ``.txt`` extension does not matter).
-4. Optionally, the population size can be set using the flag ``--pop-size``
+(w/o the `.txt` extension does not matter).
+4. Optionally, the population size can be set using the flag `--pop-size`
 followed by a positive integer number.
-5. Optionally, the number of iterations can be set using the flag ``--n-gen``
+5. Optionally, the number of iterations can be set using the flag `--n-gen`
 followed by a positive integer number.
 
 The syntax of the command is the following
 
 ```bash
-moea run ALGORITHM MODEL DATA_FILE_NAME --pop-size 10 --n-iter 10
+uv run moea run ALGORITHM MODEL DATA_FILE_NAME --pop-size 10 --n-iter 10
 ```
 
 which runs the algorithm with a population size of 10 for 10 generations.
@@ -139,35 +143,35 @@ The list of optional MOEA parameters, e.g., number of individuals in the
 initial population, number of generations, etc., can be listed using the
 ``--help`` flag for the ``run`` command.
 
-## :briefcase: Project Organization
+## 💼 Project Organization
 
 ```
-├── LICENSE            <- Open-source license if one is chosen.
-├── Makefile           <- Makefile with convenience commands like `make data` or `make train`.
-├── README.md          <- The top-level README for developers using this project.
+├── LICENSE                 <- Open-source license if one is chosen.
+├── README.md               <- The top-level README for developers using this project.
 │
-├── EnergyPLAN
-│   ├── EnergyPLAN Data <- EnergyPLAN data folder, which contains subfolders ``Costs``, ``Data``, and ``Distributions``.
-│   ├── EnergyPLAN Help <- EnergyPLAN documentation.
+├── EnergyPLANXXX           <- EnergyPLAN folder for XXX version. The folder
+│   │                          structure is the same for all EnergyPLAN versions.
+│   ├── EnergyPLAN Data     <- EnergyPLAN data folder, which contains subfolders
+│   │                          ``Costs``, ``Data``, and ``Distributions``.
+│   ├── EnergyPLAN Help     <- EnergyPLAN documentation.
 │   ├── EnergyPLAN Tools
-│   ├── energyPLAN.exe  <- EnergyPLAN executable.
+│   ├── energyPLAN.exe      <- EnergyPLAN executable.
 │   ├── energyPLAN.ini
-│   └── spool           <- The folder where to save the input files corresponding to MOEA solutions.
-│       └── results     <- The folder where EnergyPLAN saves results files when executed in ``spool`` mode.
+│   └── spool               <- The folder where to save the input files
+│       │                      corresponding to MOEA solutions.
+│       └── results         <- The folder where EnergyPLAN saves results files
+│                              when executed in ``spool`` mode.
 │
-├── docs                <- A Jupyter book project containing both MOEA documentation and case studies description.
+├── docs                    <- A Jupyter book project containing both MOEA
+│                              documentation and case studies description.
 │
-├── notebooks           <- Jupyter notebooks. Naming convention is a number (for ordering),
-│                          the creator's initials, and a short `-` delimited description, e.g.
-│                          `1.0-jqp-initial-data-exploration`.
+├── pyproject.toml          <- Project configuration file with package metadata for
+│                              moea and configuration for tools like black.
 │
-├── pyproject.toml      <- Project configuration file with package metadata for
-│                          moea and configuration for tools like black.
+├── uv.lock                 <- The requirements file for reproducing the environment, e.g.
+│                              generated with `uv sync`.
 │
-├── environment.yml     <- The requirements file for reproducing the analysis environment, e.g.
-│                          generated with `conda env create -f environment.yml`.
-│
-└── moea                <- Source code for use in this project.
+└── moea                    <- Source code for use in this project.
     │
     ├── __init__.py             <- Makes moea a Python module.
     │
@@ -182,13 +186,10 @@ initial population, number of generations, etc., can be listed using the
     │   ├── base_model.py       <- Code for the ``BaseModel`` class.
     │   └── ...                 <- Code for all other models.
     │
-    ├── algorithms
-    │   ├── __init__.py
-    │   ├── base_algorithm.py   <- Code for the ``BaseAlgorithm`` class.
-    │   └── ...                 <- Code for all other algorihtms.
-    │
-    └── plots.py                <- Code to create visualizations.
+    └── algorithms
+        ├── __init__.py
+        ├── base_algorithm.py   <- Code for the ``BaseAlgorithm`` class.
+        └── ...                 <- Code for all other algorihtms.
 ```
 
 --------
-
