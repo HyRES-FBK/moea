@@ -1,7 +1,7 @@
 # EnergyPLAN
 
-EnergyPLAN is software for energy planning at a regional, national, and supra-
-national level.
+EnergyPLAN is software for the simulation of energy systems operations at a
+regional, national, and supra-national level.
 It works on a yearly time span, which means that hourly time series of data and
 distributions must be provided for one year.
 
@@ -23,7 +23,7 @@ The options include:
 - ``-m`` to provide a modification file that will overwrite some of the options
 in a complete input file. It works only in combination with the ``-i`` options.
 
-```{admonition}
+```{warning}
 EnergyPLAN seems not to accept file names containing ``_`` or ``-``.
 ```
 

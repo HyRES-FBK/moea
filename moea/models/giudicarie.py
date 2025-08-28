@@ -4,11 +4,12 @@ from pathlib import Path
 
 
 from moea.models.base_model import BaseModel
-from moea.utils import dump_input, find_values, execute_energyplan_spool
-from moea.config import ENERGYPLAN_RESULTS
+from moea.energyplan.energyplan110 import EnergyPLAN110
 
 
 class GiudicarieEsteriori(BaseModel):
+
+    energyplan_version = EnergyPLAN110
 
     # Investment costs in kEuro
     PVInvestmentCostInKEuro = 2.6
@@ -79,7 +80,7 @@ class GiudicarieEsteriori(BaseModel):
     PEFImport = 2.17
 
     def __init__(self,
-                 data_file: str | Path = 'CEISCompleteCurrent.txt',
+                 data_file: str | Path = 'CEIS_Complete_Current.txt',
                  **kwargs):
         """
         The problem class replicates the model in:
@@ -151,129 +152,118 @@ class GiudicarieEsteriori(BaseModel):
             **kwargs
         )
 
-    def _evaluate(self, x, out, *args, **kwargs):
-        # Use pseudo-enums
-        OIL = 0
-        LPG = 1
-        BIOMASS = 2
-        CHP = 3
-        HP = 4
-        EC = 5
+    def _evaluate(self, x, out):
 
-        # Sort percentages in ascending order
-        sorted_perc = np.sort(x[:, 1:]).T
+        pv = x[:, 0]
 
-        percentages = np.zeros((5, len(x)))
-        percentages[OIL] = sorted_perc[OIL]
-        percentages[LPG] = sorted_perc[LPG] - sorted_perc[OIL]
-        percentages[BIOMASS] = sorted_perc[BIOMASS] - sorted_perc[LPG]
-        percentages[CHP] = sorted_perc[CHP] - sorted_perc[BIOMASS]
-        percentages[HP] = 1 - sorted_perc[CHP]
+        percentages = np.copy(x[:, 1:self.n_var - 1])
+        percentages = np.sort(percentages, axis=1)
+        oilBoilerHeatPercentage = percentages[:, 0]
+        LPGBoilerHeatPercentage = percentages[:, 1] - percentages[:, 0]
+        biomassBoilerHeatPercentage = percentages[:, 2] -percentages[:, 1]
+        biomassCHPHeatPercentage = percentages[:, 3] - percentages[:, 2]
+        hpHeatPercentage = 1 - percentages[:, 3]
 
         # Electric car percentage
+        electricCarPercentage = x[:, -1]
         reducedNumberOfPetrolCars = (self.currentNumberOfPertrolCars * \
-            (1 - x[:, EC])).astype(int)
+            (1 - electricCarPercentage)).astype(int)
         reducedNumberOfDieselCars = (self.currentNumberOfDieselCars * \
-            (1 - x[:, EC])).astype(int)
+            (1 - electricCarPercentage)).astype(int)
         reducedPetrolDemandInGWh = \
             (reducedNumberOfPetrolCars * self.averageKMPerYearForPetrolCar * \
-             self.LCVPetrol) / (self.petrolCarRunsKMperL * 1e6)
+             self.LCVPetrol) / (self.petrolCarRunsKMperL * 1000000)
         reducedDieselDemandInGWh = \
             (reducedNumberOfDieselCars * self.averageKMPerYearForDieselCar * \
-                self.LCVDiesel) / (self.DieselCarRunsKMperL * 1e6)
+                self.LCVDiesel) / (self.DieselCarRunsKMperL * 1000000)
         elecCarRunKM = self.totalKMRunByCars - \
             (reducedNumberOfPetrolCars * self.averageKMPerYearForPetrolCar) - \
                 (reducedNumberOfDieselCars * self.averageKMPerYearForDieselCar)
         elecCarElectricityDemandInGWh = elecCarRunKM * \
-            self.KWhPerKMElecCar / 1e6
+            self.KWhPerKMElecCar / 1000000
 
-        oilBoilerDemand = self.totalHeatDemand * percentages[OIL] / \
-            self.oilBoilerEfficiency
-        LPGBoilerDemand = self.totalHeatDemand * percentages[LPG] / \
+        oilBoilerFuelDemand = self.totalHeatDemand * oilBoilerHeatPercentage \
+            / self.oilBoilerEfficiency
+        LPGBoilerDemand = self.totalHeatDemand * LPGBoilerHeatPercentage / \
             self.ngasBoilerEfficiency
-        biogasBoilerDemand = self.totalHeatDemand * percentages[BIOMASS] / \
-            self.biomassBoilerEfficiency
-        bioCHPDemand = self.totalHeatDemand * percentages[CHP]
-        HPDemand = self.totalHeatDemand * percentages[HP]
+        biogasBoilerDemand = self.totalHeatDemand * \
+            biomassBoilerHeatPercentage / self.biomassBoilerEfficiency
+        bioCHPDemand = self.totalHeatDemand * biomassCHPHeatPercentage
+        HPDemand = self.totalHeatDemand * hpHeatPercentage
 
-        # Dump the input vectors to files
-        for i, ind in enumerate(x):
-            dump_input(
-                {
-                    "input_RES1_capacity": ind[0],
-                    "input_fuel_Households[2]": oilBoilerDemand[i],
-                    "input_fuel_Households[3]": LPGBoilerDemand[i],
-                    "input_fuel_Households[4]": biogasBoilerDemand[i],
-                    "input_HH_BioCHP_heat": bioCHPDemand[i],
-                    "input_HH_HP_heat": HPDemand[i],
-                    "input_transport_TWh": elecCarElectricityDemandInGWh[i],
-                    "input_fuel_Transport[2]": reducedDieselDemandInGWh[i],
-                    "input_fuel_Transport[5]": reducedPetrolDemandInGWh[i],
-                    "Filnavn_transport": "CIVIS_Transport_NC.txt"
-                },
-                i, self.default_data)
-
-        # Compute the objective functions
-        execute_energyplan_spool([f"input{i}.txt" for i in range(len(x))])
+        self.energyplan.run(
+            inputs=[{
+                "input_RES1_capacity": int(pv[i]),
+                "input_fuel_Households[2]": oilBoilerFuelDemand[i],
+                "input_fuel_Households[3]": LPGBoilerDemand[i],
+                "input_fuel_Households[4]": biogasBoilerDemand[i],
+                "input_HH_BioCHP_heat": bioCHPDemand[i],
+                "input_HH_HP_heat": HPDemand[i],
+                "input_transport_TWh": elecCarElectricityDemandInGWh[i],
+                "input_fuel_Transport[2]": "{:.2f}".format(reducedDieselDemandInGWh[i]),
+                "input_fuel_Transport[5]": "{:.2f}".format(reducedPetrolDemandInGWh[i]),
+                "Filnavn_transport": "CIVIS_Transport_NC.txt"
+            } for i in range(x.shape[0])]
+        )
 
         # Retrieve CO2 emissions and total annual costs
-        z = find_values(
-                ENERGYPLAN_RESULTS,
+        z = self.energyplan.read_values(
                 "CO2-emission (corrected)",
-                "Variable costs",
+                "Total variable costs",
                 "Fixed operation costs",
                 "Annual Investment costs",
-                ("Annual", "Hydro Electr."),
-                ("Annual", "PV Electr."),
-                ("Annual", "Wave Electr."),
-                ("Annual", "Import Electr."),
-                ("Annual", "Export Electr."),
-                ("Annual", "HH-CHP Electr."),
-                ("Annual", "HH-HP Electr."),
-                ("Annual", "Electr. Demand"),
+                ("Annual", "Hydro power"),
+                ("Annual", "PV"),
+                ("Annual", "Wave power"),
+                ("Annual", "import"),
+                ("Annual", "export"),
+                ("Annual", "HH-elec. CHP"),
+                ("Annual", "HH-elec. HP"),
+                ("Annual", "elec. demand"),
                 "Ngas Consumption",
                 "Oil Consumption",
                 "Biomass Consumption",
-                ("Annual", "Flexible Electr.")
-            ).T
+                ("Annual", "flexible eldemand")
+            )
 
         # Retrieve:
-        CO2 = 0  # annual CO2 emissions
-        VAR_COST = 1  # annual variable costs
-        FIX_COST = 2  # annual fixed costs
-        INV_COST = 3  # annual investment costs
-        PV = 3  # annual PV electricity
-        HYDRO = 4  # annual hydropower
-        WAVE = 5  # annual wave power
-        IMPORT = 6  # annual import
-        EXPORT = 7  # annual export
-        HP = 8  # annual HP electricity
-        HH_CHP = 9  # annual HH electricity CHP
-        DEMAND = 10  # annual demand
-        NGAS = 11  # annual natural gas
-        OIL = 12  # annual oil
-        BIOMASS = 13  # annual biomass
-        FLEXI = 14  # annual flexible demand
+        CO2 = 0         # annual CO2 emissions
+        VAR_COST = 1    # annual variable costs
+        FIX_COST = 2    # annual fixed costs
+        INV_COST = 3    # annual investment costs
+        HYDRO = 4       # annual hydropower
+        PV = 5          # annual PV electricity
+        WAVE = 6        # annual wave power
+        IMPORT = 7      # annual import
+        EXPORT = 8      # annual export
+        HH_CHP = 9      # annual HH electricity CHP
+
+        HP = 10         # annual HP electricity
+        DEMAND = 11     # annual demand
+        NGAS = 12       # annual natural gas
+        OIL = 13        # annual oil
+        BIOMASS = 14    # annual biomass
+        FLEXI = 15      # annual flexible demand
 
         totalAdditionalCost = ((
-            z[HYDRO] + z[PV] + z[HH_CHP] + z[IMPORT] - z[EXPORT]
+            z[:, HYDRO] + z[:, PV] + z[:, HH_CHP] + z[:, IMPORT] - z[:, EXPORT]
         ) * self.addtionalCostPerGWhinKEuro).astype(int)
 
         # The meaning of HP changed, use directly the index 4
         capacityOfHeatPump = (
-            (self.maxHeatDemandInDistribution * percentages[4] *
+            (self.maxHeatDemandInDistribution * hpHeatPercentage *
              self.totalHeatDemand * 1e6) / \
                 (self.COP * self.sumOfAllHeatDistributions)).astype(int)
 
         geoBoreHoleInvestmentCost = (
             capacityOfHeatPump * self.geoBoreholeCostInKWe * self.interest
-        ) / (1 - (1 + self.interest) ** -self.geoBoreHoleLifeTime)
+        ) / (1 - np.pow((1 + self.interest), -self.geoBoreHoleLifeTime))
 
         # See the annual inventment cost formula in EnergyPLAN manual
 
         # The meaning of BIOMASS changed, use directly the index 2
         newCapacityBiomassBoiler = (
-            (self.totalHeatDemand * percentages[2]) * 1e6 * 1.5 /
+            (self.totalHeatDemand * biomassBoilerHeatPercentage) * 1e6 * 1.5 /
             self.sumOfAllHeatDistributions).astype(int)
 
         investmentCostReductionBiomassBoiler = np.where(
@@ -281,15 +271,16 @@ class GiudicarieEsteriori(BaseModel):
             (self.currentIndvBiomassBoilerCapacity * \
                 self.individualBoilerInvestmentCostInKEuro * \
                     self.interest) / \
-                    (1 - (1 + self.interest) ** -self.boilerLifeTime),
+                    (1 - np.pow((1 + self.interest), -self.boilerLifeTime)),
             (newCapacityBiomassBoiler * \
                 self.individualBoilerInvestmentCostInKEuro * \
                     self.interest) / \
-                        (1 - (1 + self.interest) ** -self.boilerLifeTime)
+                        (1 - np.pow((1 + self.interest), -self.boilerLifeTime))
         )
 
         # Since OIL has been overwritten, we use directly the index 1 for OIL
-        newCapacityOilBoiler = ((self.totalHeatDemand * percentages[1]) * \
+        newCapacityOilBoiler = (
+            (self.totalHeatDemand * oilBoilerHeatPercentage) *
             1e6 * 1.5 / self.sumOfAllHeatDistributions).astype(int)
 
         investmentCostReductionOilBoiler = np.where(
@@ -297,15 +288,16 @@ class GiudicarieEsteriori(BaseModel):
             (self.currentIndvOilBoilerCapacity * \
                 self.individualBoilerInvestmentCostInKEuro * \
                     self.interest) / \
-                    (1 - (1 + self.interest) ** -self.boilerLifeTime),
+                    (1 - np.pow((1 + self.interest), -self.boilerLifeTime)),
             (newCapacityOilBoiler * \
                 self.individualBoilerInvestmentCostInKEuro * \
                     self.interest) / \
-                        (1 - (1 + self.interest) ** -self.boilerLifeTime)
+                        (1 - np.pow((1 + self.interest), -self.boilerLifeTime))
         )
 
         # Since LPG has been overwritten, we use directly the index 1 for LPG
-        newCapacityLPGBoiler = ((self.totalHeatDemand * percentages[1]) * \
+        newCapacityLPGBoiler = (
+            (self.totalHeatDemand * LPGBoilerHeatPercentage) *
             1e6 * 1.5 / self.sumOfAllHeatDistributions).astype(int)
 
         investmentCostReductionLPGBoiler = np.where(
@@ -313,28 +305,28 @@ class GiudicarieEsteriori(BaseModel):
             (self.currentIndvLPGBoilerCapacity * \
                 self.individualBoilerInvestmentCostInKEuro * \
                     self.interest) / \
-                    (1 - (1 + self.interest) ** -self.boilerLifeTime),
+                    (1 - np.pow((1 + self.interest), -self.boilerLifeTime)),
             (newCapacityLPGBoiler * \
                 self.individualBoilerInvestmentCostInKEuro * \
                     self.interest) / \
-                        (1 - (1 + self.interest) ** -self.boilerLifeTime)
+                        (1 - np.pow((1 + self.interest), -self.boilerLifeTime))
         )
 
         reductionInvestmentCost = \
             (self.currentPVCapacity * self.PVInvestmentCostInKEuro *
-             self.interest) / (1 - (1 + self.interest) ** -self.PVLifeTime) + \
+             self.interest) / (1 - np.pow((1 + self.interest), -self.PVLifeTime)) + \
             (self.currentHydroCapacity * self.hydroInvestmentCostInKEuro *
              self.interest) / \
-                (1 - (1 + self.interest) ** -self.HydroLifeTime) + \
+                (1 - np.pow((1 + self.interest), -self.HydroLifeTime)) + \
             (self.currentBiogasCapacity * self.BiogasInvestmentCostInKEuro *
              self.interest) / \
-                (1 - (1 + self.interest) ** -self.BiogasLifeTime) + \
+                (1 - np.pow((1 + self.interest), -self.BiogasLifeTime)) + \
             investmentCostReductionBiomassBoiler + \
             investmentCostReductionOilBoiler + \
             investmentCostReductionLPGBoiler
 
         # Compute the real investment cost
-        realInvestmentCost = z[INV_COST] - \
+        realInvestmentCost = z[:, INV_COST] - \
             reductionInvestmentCost + geoBoreHoleInvestmentCost
 
         # Electric car related costs
@@ -342,44 +334,45 @@ class GiudicarieEsteriori(BaseModel):
             self.currentNumberOfPertrolCars + self.currentNumberOfDieselCars -
             reducedNumberOfPetrolCars - reducedNumberOfDieselCars).astype(int)
 
-        totalInvestmentCostForElectricCars = totalNumberOfELectricCars * \
-            self.costOfElectricCarInKeuro * self.interest / \
-                (1 - (1 + self.interest) ** -self.electricCarLifeTime)
+        totalInvestmentCostForElectricCars = (totalNumberOfELectricCars * \
+            self.costOfElectricCarInKeuro * self.interest) / \
+                (1 - np.pow((1 + self.interest), -self.electricCarLifeTime))
 
         totalFixOperationalAndInvestmentCostForElectricCars = \
             totalNumberOfELectricCars * self.costOfElectricCarInKeuro * \
                 self.electricCarOperationalAndMaintanenceCost
 
         # Compute the actual annual cost, which is the third objective
-        actualAnnualCost = z[VAR_COST] + z[FIX_COST] + \
+        actualAnnualCost = z[:, VAR_COST] + z[:, FIX_COST] + \
             realInvestmentCost + totalAdditionalCost + \
             totalInvestmentCostForElectricCars + \
                 totalFixOperationalAndInvestmentCostForElectricCars
 
         # Load followint capacity
-        LFS = (z[IMPORT] + z[EXPORT]) / (z[DEMAND] + z[FLEXI] + z[HP])
+        LFS = (z[:, IMPORT] + z[:, EXPORT]) / \
+            (z[:, DEMAND] + z[:, FLEXI] + z[:, HP])
 
-        totalPEForElectricity = z[PV] * self.PVPEF + z[HYDRO] * self.HYPEF + \
-            z[WAVE] * self.BioGasPEF + z[BIOMASS] * self.BiomassPEF
+        totalPEForElectricity = z[:, PV] * self.PVPEF + z[:, HYDRO] * self.HYPEF + \
+            z[:, WAVE] * self.BioGasPEF + z[:, BIOMASS] * self.BiomassPEF
 
-        totalLocalElecProduction = z[PV] + z[HYDRO] + z[WAVE] + z[HH_CHP]
+        totalLocalElecProduction = z[:, PV] + z[:, HYDRO] + z[:, WAVE] + z[:, HH_CHP]
 
         PEFLocalElec = totalPEForElectricity / totalLocalElecProduction
 
-        totalPEConsumption = (totalLocalElecProduction - z[EXPORT]) * \
-            PEFLocalElec + z[IMPORT] * self.PEFImport + z[BIOMASS] + \
-                z[OIL] + z[NGAS] + (self.totalHeatDemand * percentages[4]) * \
+        totalPEConsumption = (totalLocalElecProduction - z[:, EXPORT]) * \
+            PEFLocalElec + z[:, IMPORT] * self.PEFImport + z[:, BIOMASS] + \
+                z[:, OIL] + z[:, NGAS] + (self.totalHeatDemand * hpHeatPercentage) * \
                     (1 - 1 / self.COP)
 
-        ESD = (z[IMPORT] * self.PEFImport + z[OIL] + z[NGAS]) / \
+        ESD = (z[:, IMPORT] * self.PEFImport + z[:, OIL] + z[:, NGAS]) / \
             totalPEConsumption
 
         out["F"] = np.column_stack([
-            z[CO2], actualAnnualCost, LFS, ESD
+            z[:, CO2], actualAnnualCost, LFS, ESD
         ])
 
         ##########################
         # Evaluate the constraints
         ##########################
         # There is only one constraint to limit the consumption of biomass
-        out["G"] = np.column_stack([56.87 - z[BIOMASS]])
+        out["G"] = np.column_stack([56.87 - z[:, BIOMASS]])
