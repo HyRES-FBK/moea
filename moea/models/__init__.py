@@ -2,13 +2,15 @@ from moea.models.aalborg import Aalborg
 from moea.models.giudicarie import GiudicarieEsteriori
 from moea.models.vdn import ValDiNon
 from moea.models.ceis2021 import CEIS2021
+from moea.models.oslo import Oslo
 
 
 MODELS = {
     'aalborg': Aalborg,
     'giudicarie': GiudicarieEsteriori,
     'vdn': ValDiNon,
-    'ceis2021': CEIS2021
+    'ceis2021': CEIS2021,
+    'oslo': Oslo
 }
 
 
