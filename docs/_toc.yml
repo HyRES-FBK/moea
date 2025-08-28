@@ -12,4 +12,3 @@ parts:
   chapters:
   - file: use-cases/aalborg.ipynb
   - file: use-cases/giudicarie.ipynb
-  - file: use-cases/oslo.ipynb
