@@ -53,7 +53,7 @@ class EnergyPLAN110(EnergyPLANBase):
         for line in lines[i + 5:]:
             line = [ln.replace(":", "").strip() for ln in line.split("\0")]
             if key[0] in line:
-                return float(line[j])
+                return float(line[j].replace(",","."))
 
     def _find_values(self, file_path: Path, *keys: str | tuple[str, str]):
         """
