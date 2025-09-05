@@ -4,8 +4,8 @@
     <img src="https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter" />
 </a>
 
-The repositoty collects energy scenario optimization case studies using multi-
-objective evolutionary algorithms (MOEA).
+The repositoty collects energy scenario optimization case studies using
+multi-objective evolutionary algorithms (MOEA).
 Energy modelling is delegated to EnergyPLAN, which is used here as the
 the objective function.
 The code ease the interaction with EnergyPLAN and allows the user to focus on
@@ -20,18 +20,14 @@ The MOEA package works only in Windows because EnergyPLAN runs only in Windows.
 
 EnergyPLAN is provided with the repository and no separate download is
 required.
-If you want to use a different version of EnergyPLAN, you can change the folder
-named ``EnergyPLAN``.
+The available EnergyPLAN versions are listed in the project folder.
+If you want to use a different version of EnergyPLAN, you need to add it to the
+project folder and connect it through the `energyplan.py` module.
 
 
 Be aware that EnergyPLAN requires to respect a specific folder structure.
 Since the MOEA exploits EnergyPLAN's *spool* mode, check for the existence of
-the folders ``spool`` and ``spool/results``.
-
-The only requirement of the project is to have **conda** available to generate
-a Python environment.
-Conda is availabale both through [Anaconda](https://www.anaconda.com/download)
-or [Miniconda](https://docs.anaconda.com/miniconda/install/).
+the folders `spool` and `spool/results` within each `EnergyPLANXXX` folder.
 
 ## 🚀 Quickstart
 
@@ -53,11 +49,12 @@ uv sync
 Setup of an experiment is carried out in EnergyPLAN, which provides a handy GUI.
 When a scenario has been configured, experimental parameters are stored in a
 data file, whose path is required to run the algorithm. Input data files
-generated with EnergyPLAN are stored in ``EnergyPLAN/EnergyPLAN Data/Data``.
-The set decision variables that can be used in MOEA algorithm is a subset of
+generated with EnergyPLAN are stored in `EnergyPLANXXX/EnergyPLAN Data/Data`.
+The set of decision variables that can be used to define a model is a subset of
 the parameters in the input file.
 The algorithms will change only the variables declared in the model,
-leaving all the others unchanged.
+leaving all the others as in the `data_file` provided when initializing a model
+object.
 
 ### ✨ Model definition
 
@@ -69,21 +66,20 @@ necessarily have to map to EnergyPLAN input names, they can be anything that
 fits your needs. However, decision variables need to be mapped to EnergyPLAN
 input variables before running a simulation in EnergyPLAN.
 2. Objective function values are declared in the `_evaluate` method of a model
-object, and they can be EnergyPLAN output values, or they the result from
+object, and they can be EnergyPLAN output values, or the result of
 postprocessing of EnergyPLAN solution values.
 3. Constraints are declared in the `_evaluate` method of a model using
 `out["H"]` and `out["G"]` for equality and inequality constraints.
 
-It is good practice to store models in the folder ``moea/models``.
-To create a new model, declare a new class that inherits from the ``BaseModel``
-class in ``moea.models.base_model``.
-Each module (i.e., a file in the folder ``models``) can contain several models.
+It is good practice to store models in the folder `moea/models`.
+To create a new model, declare a new class that inherits from the `BaseModel`
+class in `moea.models.base_model`.
+Each module (i.e., a file in the folder `models`) can contain several models.
 A good practice is to group models in modules by similarity of the concepts
 that they are intended to model.
 
 When a new model is created, to make it available to the function
-``get_model``, it must be added to the list of models in the ``__init__.py``
-file of the ``models`` package.
+`get_model`, it must be added to the list of models in `moea/models/__init__.py`.
 
 ### 🧰 Algorithm definition
 
@@ -91,21 +87,22 @@ Custom algorithms can be defined by the user.
 New algorithms can inherit from existing algorithms and modify only specific
 functions.
 For example, the Domain Knowledge algorithm by Mahbub inherits from the class
-``BaseAlgorithm``, which in turn inherits from an ``NSGA2`` algorithm, and
+`BaseAlgorithm`, which in turn inherits from an `NSGA2` algorithm, and
 modifies only the population initialization and mutation functions.
 
-It is good practice to store algorithms in the folder ``moea/algorithms``.
+It is good practice to store algorithms in the folder `moea/algorithms`.
 
 When a new algorithm is created, to make it available to the function
-``get_algorithm``, it must be added to the list of models in the
-``__init__.py`` file of the ``algorithms`` package.
+`get_algorithm`, it must be added to the list of models in the
+`moea/algorithms/__init__.py`.
 
-### 🚴‍♂️ Run an MOEA algorithm
+### 🚴‍♂️ Run an algorithm
 
 If the Python environment was created without errors, the application `moea`
 should be accessible from the command line when the environment is active.
 
-A minimal guide to the use of `moea` is available via (assuming that you are using `uv`)
+Assuming that you are using `uv`, a minimal guide to the use of `moea` is
+available via
 
 ```bash
 uv run moea --help
@@ -141,7 +138,7 @@ uv run moea run ALGORITHM MODEL DATA_FILE_NAME --pop-size 10 --n-iter 10
 which runs the algorithm with a population size of 10 for 10 generations.
 The list of optional MOEA parameters, e.g., number of individuals in the
 initial population, number of generations, etc., can be listed using the
-``--help`` flag for the ``run`` command.
+`--help` flag for the `run` command.
 
 ## 💼 Project Organization
 
@@ -170,6 +167,8 @@ initial population, number of generations, etc., can be listed using the
 │
 ├── uv.lock                 <- The requirements file for reproducing the environment, e.g.
 │                              generated with `uv sync`.
+│
+├── .python-version         <- The file containing the default Python version to sync uv.
 │
 └── moea                    <- Source code for use in this project.
     │
