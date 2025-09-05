@@ -23,7 +23,7 @@ class EnergyPLAN110(EnergyPLANBase):
             if key in line:
                 for col in line[1:]:
                     if col:
-                        return float(col)
+                        return float(col.replace(",", "."))
             if line[0] == "TOTAL ANNUAL COSTS":
                 return
 
