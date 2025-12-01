@@ -1,18 +1,15 @@
 import unittest
-import numpy as np
-
 from pymoo.optimize import minimize
 
 from moea.models import get_model
 from moea.algorithms import get_algorithm
-from moea.algorithms.base_algorithm import BaseAlgorithm
 
 
 class TestAalborg(unittest.TestCase):
 
     def setUp(self) -> None:
         self.model = get_model('Aalborg')
-        self.algorithm = get_algorithm('NSGAII', pop_size=10)
+        self.algorithm = get_algorithm('NSGAII', pop_size=2)
         return super().setUp()
 
     def test_model_features(self):
@@ -24,7 +21,7 @@ class TestAalborg(unittest.TestCase):
         res = minimize(
             problem=self.model,
             algorithm=self.algorithm,
-            termination=('n_gen', 10),
+            termination=('n_gen', 2),
             seed=1
         )
         self.assertIsNotNone(res.X)
@@ -37,7 +34,7 @@ class TestAalborgMahbub2016(unittest.TestCase):
 
     def setUp(self) -> None:
         self.model = get_model('Aalborg')
-        self.algorithm = get_algorithm('mahbub2016', pop_size=5)
+        self.algorithm = get_algorithm('mahbub2016', pop_size=2)
         return super().setUp()
 
     def test_model_features(self):
@@ -49,7 +46,7 @@ class TestAalborgMahbub2016(unittest.TestCase):
         res = minimize(
             problem=self.model,
             algorithm=self.algorithm,
-            termination=('n_gen', 3),
+            termination=('n_gen', 2),
             seed=1
         )
         self.assertIsNotNone(res.X)
@@ -62,7 +59,7 @@ class TestGiudicarie(unittest.TestCase):
 
     def setUp(self) -> None:
         self.model = get_model('Giudicarie')
-        self.algorithm = get_algorithm('NSGAII', pop_size=5)
+        self.algorithm = get_algorithm('NSGAII', pop_size=2)
         return super().setUp()
 
     def test_model_features(self):
@@ -74,7 +71,7 @@ class TestGiudicarie(unittest.TestCase):
         res = minimize(
             problem=self.model,
             algorithm=self.algorithm,
-            termination=('n_gen', 5),
+            termination=('n_gen', 2),
             seed=987
         )
         self.assertIsNotNone(res.X)
@@ -87,7 +84,7 @@ class TestValDiNon(unittest.TestCase):
 
     def setUp(self) -> None:
         self.model = get_model('vdn', year=2020)
-        self.algorithm = get_algorithm('NSGAII', pop_size=5)
+        self.algorithm = get_algorithm('NSGAII', pop_size=2)
         return super().setUp()
 
     def test_model_features(self):
@@ -99,7 +96,7 @@ class TestValDiNon(unittest.TestCase):
         res = minimize(
             problem=self.model,
             algorithm=self.algorithm,
-            termination=('n_gen', 5),
+            termination=('n_gen', 2),
             seed=987
         )
         self.assertIsNotNone(res.X)

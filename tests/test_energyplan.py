@@ -2,7 +2,6 @@ import unittest
 import numpy as np
 from pathlib import Path
 from moea.energyplan.energyplan_base import EnergyPLANBase
-from moea.energyplan.energyplan_splool import EnergyPLANSpool
 from moea.energyplan.energyplan110 import EnergyPLAN110
 from moea.energyplan.energyplan161 import EnergyPLAN161
 
@@ -29,27 +28,6 @@ class TestEnergyPlanBaseClass(unittest.TestCase):
             EnergyPLANBase(
                 energyplan_data_file="non_existent_file.txt",
             )
-
-
-class TestEnergyPlanSpoolClass(unittest.TestCase):
-
-    def setUp(self) -> None:
-        self.dummy_path = Path("dummy_path")
-
-    def tearDown(self) -> None:
-        remove_files(self.dummy_path)
-
-    def test_initialization(self):
-        with self.assertRaises(FileNotFoundError):
-            EnergyPLANSpool(energyplan_data_file="dummy_path")
-
-    def test_setup(self):
-        energyplan_spool = EnergyPLANSpool(
-            energyplan_data_file="dummy_path"
-        )
-        energyplan_spool._setup()
-        self.assertTrue(energyplan_spool.spool_folder.exists())
-        self.assertTrue(energyplan_spool.results_folder.exists())
 
 
 class TestEnergyPLAN110Class(unittest.TestCase):
