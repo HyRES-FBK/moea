@@ -11,6 +11,16 @@ ENERGYPLAN_DISTRIBUTIONS_DIR = ENERGYPLAN161 / "EnergyPLAN Data/Distributions"
 
 
 class CEIS2021(BaseModel):
+    """
+    The class implements the problem presented in
+
+    > Viesi, D., Mahbub, M. S., Brandi, A., Thellufsen, J. Z., Østergaard,
+    > P. A., Lund, H., ... & Crema, L. (2023). Multi-objective optimization of
+    > an energy community: an integrated and dynamic approach for full
+    > decarbonisation in the European Alps. **International Journal of
+    > Sustainable Energy Planning and Management**, 38, 8-29.
+
+    """
 
     energyplan_version = EnergyPLAN161
 
@@ -91,7 +101,7 @@ class CEIS2021(BaseModel):
         super().__init__(
             n_var=len(self.vars),
             n_obj=2,
-            n_ieq_constr=3,
+            # n_ieq_constr=3,
             xl=self.vars['lb'].values,
             xu=self.vars['ub'].values,
             data_file=data_file,
@@ -175,29 +185,15 @@ class CEIS2021(BaseModel):
         # Write input files:
         # Some of the variables are subject to changes before being written
         #######################################################################
-        # Battery 1
+        # Battery 1 sets the value of three EnergyPLAN inputs
+        battery1 = v[:, self.vars.index.get_loc('input_cap_pump_el')]
         # Electric storage capacity for turbine
-        v[:, self.vars.index.get_loc('input_cap_pump_el')] *= 1e3 / 2
+        v[:, self.vars.index.get_loc('input_cap_pump_el')] = battery1 * 1e3 / 2
         # Electric storage capacity for pump
-        v[:, self.vars.index.get_loc('input_cap_turbine_el')] *= 1e3 / 2
+        v[:, self.vars.index.get_loc('input_cap_turbine_el')] = battery1 * 1e3 / 2
         # Electric storage capacity for Storage
-        v[:, self.vars.index.get_loc('input_storage_pump_cap')] *= 1e3
-        ########
-        # Heat #
-        ########
-        # Fuel demands for heating
-        # In the original code by Mahbub, there's also a key named
-        # coilBoilerFuelDemand that is set to coalBoilerHeatDemand /
-        # coalBoilerEfficiency. However, this key is never used anywhere in
-        # the code. I'm not sure if it's a mistake or if it's used somewhere
-        v[:, self.vars.index.get_loc('input_fuel_Households[1]')] /= \
-            self.scenario['coalBoilerEfficiency']
-        v[:, self.vars.index.get_loc('input_fuel_Households[2]')] /= \
-            self.scenario['oilBoilerEfficiency']
-        v[:, self.vars.index.get_loc('input_fuel_Households[3]')] /= \
-            self.scenario['nGasBoilerEfficiency']
-        v[:, self.vars.index.get_loc('input_fuel_Households[4]')] /= \
-            self.scenario['biomassBoilerEfficiency']
+        v[:, self.vars.index.get_loc('input_storage_pump_cap')] = battery1
+
         #################
         # Solar thermal #
         #################
@@ -212,18 +208,24 @@ class CEIS2021(BaseModel):
         #############
         # Transport #
         #############
+        # Diesel car demand in km is used to set 2 EnergyPLAN inputs
+        dieselDemand = v[:, self.vars.index.get_loc('input_fuel_Transport[2]')]
         # Diesel car fuel demand
-        v[:, self.vars.index.get_loc('input_fuel_Transport[2]')] *= \
-            self.scenario['efficiencyDieselCar'] / 1e6
+        v[:, self.vars.index.get_loc('input_fuel_Transport[2]')] = \
+            dieselDemand * self.scenario['efficiencyDieselCar'] / 1e6
         # Number of diesel cars
         key = 'Input_Size_transport_conventional_cars'
-        v[:, self.vars.index.get_loc(key)] /= self.averageKMPerYearPerCar
+        v[:, self.vars.index.get_loc(key)] = \
+            dieselDemand / self.averageKMPerYearPerCar
+        # Electric car demand in km is used to set 2 EnergyPLAN inputs
+        electriCarDemand = v[:, self.vars.index.get_loc('input_transport_TWh')]
         # Electric car demand
-        v[:, self.vars.index.get_loc('input_transport_TWh')] *= \
-            self.scenario['efficiencyEVCar'] / 1e6
+        v[:, self.vars.index.get_loc('input_transport_TWh')] = \
+            electriCarDemand * self.scenario['efficiencyEVCar'] / 1e6
         # Number of electric cars
         key = 'Input_Size_transport_electric_cars'
-        v[:, self.vars.index.get_loc(key)] /= self.averageKMPerYearPerCar
+        v[:, self.vars.index.get_loc(key)] = \
+            electriCarDemand / self.averageKMPerYearPerCar
         # Hydrogen car demand
         v[:, self.vars.index.get_loc('input_fuel_Transport[6]')] *= \
             self.scenario['efficiencyH2Car'] / 1e6
@@ -268,7 +270,7 @@ class CEIS2021(BaseModel):
             co2InImportedEleOil = z[IMPORT] / 0.53 * 0.66 / 100 * 0.267
             co2InImportedEleNGas = z[IMPORT] / 0.53 * 43.94 / 100 * 0.202
         elif self.year == 2050:
-            co2InImportedEleOil = z[IMPORT] / 0.56 * 0.00 / 100 * 0.267  #TODO: c'e una moltiplicazione per zero qui!!!
+            co2InImportedEleOil = z[IMPORT] / 0.56 * 0.00 / 100 * 0.267
             co2InImportedEleNGas = z[IMPORT] / 0.56 * 12.00 / 100 * 0.202
 
         localCO2emission = z[CO2] + co2InImportedEleOil + \
@@ -279,20 +281,18 @@ class CEIS2021(BaseModel):
         # Retrieve the annual H2mCHP heat demand from the variables
         annualH2mCHPHeat = v[:, self.vars.index.\
                              get_loc('input_HH_H2CHP_storage')]
-        #TODO: Calculation of the annual investment cost is the same for 2030 and 2050
         investmentCostAnnualH2mCHPheat = \
             ((annualH2mCHPHeat * 1e2 / 1.5) *  3.725 * 0.03) / \
                 (1 - np.pow(1 + 0.03, -20))
 
         z[INV_COST] +=  investmentCostAnnualH2mCHPheat
 
-        #TODO: Calculation of the annual operational cost is the same for 2030 and 2050
         operationalCostAnnualH2mCHPheat = \
             (annualH2mCHPHeat * 1e2 / 1.5) * 0.0417 * 3.725
 
         z[FIX_COST] += operationalCostAnnualH2mCHPheat
 
-        annualnGasmCHPHeat = x[:, self.vars.index.\
+        annualnGasmCHPHeat = v[:, self.vars.index.\
                                get_loc('input_HH_NgasCHP_heat')]
         FU_N_Gas_CHP = 0.284618279
         investmentCostAnnualnGasmCHPheat = (
@@ -314,7 +314,7 @@ class CEIS2021(BaseModel):
 
         z[FIX_COST] += operationalCostAnnualnGasmCHPheat
 
-        annualBiomassmCHPHeat = x[:, self.vars.index.\
+        annualBiomassmCHPHeat = v[:, self.vars.index.\
                                   get_loc('input_HH_BioCHP_heat')]
         FU_Biogas_CHP = 0.284618279
         investmentCostBiomassmCHP = (
@@ -337,11 +337,11 @@ class CEIS2021(BaseModel):
 
         z[FIX_COST] += operationalCostBiomassmCHP
 
-        elCarDemandInKM = x[:, self.vars.index.\
+        elCarDemandInKM = v[:, self.vars.index.\
                             get_loc('input_transport_TWh')]
         elCarDemandInGWh = \
             elCarDemandInKM * self.scenario['efficiencyEVCar'] / 1e6
-        h2CarDemandInKM = x[:, self.vars.index.\
+        h2CarDemandInKM = v[:, self.vars.index.\
                             get_loc('input_fuel_Transport[6]')]
         # Cost for H2 cars
         elForH2ForTransport = h2CarDemandInKM * 0.239 / 0.7217 / 1e6
@@ -381,8 +381,8 @@ class CEIS2021(BaseModel):
         # Cost for solar heat storage
         for _, row in self.vars.iterrows():
             if row['category'] == "Solar storage":
-                solarStorageInDays = x[:, self.vars.index.get_loc(row.name)]
-                heatDemand = x[:, self.vars.index.get_loc(row.name) - 8]
+                solarStorageInDays = v[:, self.vars.index.get_loc(row.name)]
+                heatDemand = v[:, self.vars.index.get_loc(row.name) - 8]
                 investmentCostForSolarHeatStorage += \
                     solarStorageInDays * heatDemand / 366 * 3000 * 0.03 / \
                         (1 - np.pow(1 + 0.03, -30))
@@ -415,37 +415,37 @@ class CEIS2021(BaseModel):
 
         actualAnnualCost = z[VAR_COST] + z[FIX_COST] + z[INV_COST]
 
-        out["F"] = np.array([localCO2emission, actualAnnualCost])
+        out["F"] = np.array([localCO2emission, actualAnnualCost]).T
 
-        # Calculation of constraints
-        for _, row in self.vars.iterrows():
-            if row['category'] == "Heat demand":
-                heatDemand = x[:, self.vars.index.get_loc(row.name)]
-                solarInput = x[:, self.vars.index.get_loc(row.name) + 8]
-                solarStorage = x[:, self.vars.index.get_loc(row.name) + 16]
-                xSolarInput = True if row.name == 'input_HH_HP_solar' \
-                    else False
-                # Solar utilization caluculation changes when considering HP
-                solarUtilization = self.solarUtilization(
-                    heatDemand, solarInput, solarStorage, xSolarInput
-                )
+        # # Calculation of constraints
+        # for _, row in self.vars.iterrows():
+        #     if row['category'] == "Heat demand":
+        #         heatDemand = v[:, self.vars.index.get_loc(row.name)]
+        #         solarInput = v[:, self.vars.index.get_loc(row.name) + 8]
+        #         solarStorage = v[:, self.vars.index.get_loc(row.name) + 16]
+        #         xSolarInput = True if row.name == 'input_HH_HP_solar' \
+        #             else False
+        #         # Solar utilization caluculation changes when considering HP
+        #         solarUtilization = self.solarUtilization(
+        #             heatDemand, solarInput, solarStorage, xSolarInput
+        #         )
 
-        # PV constraint
-        PVConstraint = self.scenario['totalLand'] - \
-            (x[:, self.vars.index.get_loc('input_RES2_capacity')] - 636.72) / \
-                self.scenario['PVCapCoeff1'] + \
-                    (totalSolarThermalInput * 1e6 /
-                     self.scenario['PVCapCoeff2'])
-        # Import constraint
-        importConstraint = - z[MAX_IMPORT]
-        # Export constraint
-        exportConstraint = - z[MAX_EXPORT]
+        # # PV constraint
+        # PVConstraint = self.scenario['totalLand'] - \
+        #     (v[:, self.vars.index.get_loc('input_RES2_capacity')] - 636.72) / \
+        #         self.scenario['PVCapCoeff1'] + \
+        #             (totalSolarThermalInput * 1e6 /
+        #              self.scenario['PVCapCoeff2'])
+        # # Import constraint
+        # importConstraint = - z[MAX_IMPORT]
+        # # Export constraint
+        # exportConstraint = - z[MAX_EXPORT]
 
-        out["G"] = np.column_stack([
-            PVConstraint,
-            importConstraint,
-            exportConstraint
-        ])
+        # out["G"] = np.column_stack([
+        #     PVConstraint,
+        #     importConstraint,
+        #     exportConstraint
+        # ])
 
 
     def solarUtilization(self, heatDemand, solarInput, storageDays,
