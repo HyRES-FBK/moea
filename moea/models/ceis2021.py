@@ -101,7 +101,7 @@ class CEIS2021(BaseModel):
         super().__init__(
             n_var=len(self.vars),
             n_obj=2,
-            # n_ieq_constr=3,
+            n_ieq_constr=3,
             xl=self.vars['lb'].values,
             xu=self.vars['ub'].values,
             data_file=data_file,
@@ -186,7 +186,7 @@ class CEIS2021(BaseModel):
         # Some of the variables are subject to changes before being written
         #######################################################################
         # Battery 1 sets the value of three EnergyPLAN inputs
-        battery1 = v[:, self.vars.index.get_loc('input_cap_pump_el')]
+        battery1 = v[:, self.vars.index.get_loc('input_cap_pump_el')].copy()
         # Electric storage capacity for turbine
         v[:, self.vars.index.get_loc('input_cap_pump_el')] = battery1 * 1e3 / 2
         # Electric storage capacity for pump
@@ -194,11 +194,27 @@ class CEIS2021(BaseModel):
         # Electric storage capacity for Storage
         v[:, self.vars.index.get_loc('input_storage_pump_cap')] = battery1
 
+        # Coal boiler heat demand
+        v[:, self.vars.index.get_loc('input_fuel_Households[1]')] /= \
+            self.scenario['coalBoilerEfficiency']
+        # Oil boiler heat demand
+        v[:, self.vars.index.get_loc('input_fuel_Households[2]')] /= \
+            self.scenario['oilBoilerEfficiency']
+        # NGas boiler heat demand
+        v[:, self.vars.index.get_loc('input_fuel_Households[3]')] /= \
+            self.scenario['nGasBoilerEfficiency']
+        # Biomass boiler heat demand
+        v[:, self.vars.index.get_loc('input_fuel_Households[4]')] /= \
+            self.scenario['biomassBoilerEfficiency']
+
         #################
         # Solar thermal #
         #################
         solarThermalMask = self.vars['category'] == 'Solar Thermal'
         heatDemandMask = self.vars['category'] == 'Heat demand'
+        # Update variables
+        v[:, solarThermalMask] = v[:, solarThermalMask] * v[:, heatDemandMask]
+        # Store total solar thermal for later use in PV constraint calculation
         totalSolarThermalInput = np.sum(
             v[:, solarThermalMask] * v[:, heatDemandMask],
             axis=1
@@ -209,7 +225,7 @@ class CEIS2021(BaseModel):
         # Transport #
         #############
         # Diesel car demand in km is used to set 2 EnergyPLAN inputs
-        dieselDemand = v[:, self.vars.index.get_loc('input_fuel_Transport[2]')]
+        dieselDemand = v[:, self.vars.index.get_loc('input_fuel_Transport[2]')].copy()
         # Diesel car fuel demand
         v[:, self.vars.index.get_loc('input_fuel_Transport[2]')] = \
             dieselDemand * self.scenario['efficiencyDieselCar'] / 1e6
@@ -218,7 +234,7 @@ class CEIS2021(BaseModel):
         v[:, self.vars.index.get_loc(key)] = \
             dieselDemand / self.averageKMPerYearPerCar
         # Electric car demand in km is used to set 2 EnergyPLAN inputs
-        electriCarDemand = v[:, self.vars.index.get_loc('input_transport_TWh')]
+        electriCarDemand = v[:, self.vars.index.get_loc('input_transport_TWh')].copy()
         # Electric car demand
         v[:, self.vars.index.get_loc('input_transport_TWh')] = \
             electriCarDemand * self.scenario['efficiencyEVCar'] / 1e6
@@ -228,7 +244,7 @@ class CEIS2021(BaseModel):
             electriCarDemand / self.averageKMPerYearPerCar
         # Hydrogen car demand
         v[:, self.vars.index.get_loc('input_fuel_Transport[6]')] *= \
-            self.scenario['efficiencyH2Car'] / 1e6
+            (self.scenario['efficiencyH2Car'] / 1e6)
 
         # Call EnergyPLAN using spool mode; only the input files are needed
         self.energyplan.run(
@@ -279,16 +295,17 @@ class CEIS2021(BaseModel):
         z[VAR_COST] -= z[BOTTLENECK]
 
         # Retrieve the annual H2mCHP heat demand from the variables
-        annualH2mCHPHeat = v[:, self.vars.index.\
-                             get_loc('input_HH_H2CHP_storage')]
+        # In the first implementation we retrieved input_HH_H2CHP_heat
+        annualH2mCHPHeat = v[:, self.vars.index.get_loc('input_HH_H2CHP_heat')]
+
         investmentCostAnnualH2mCHPheat = \
-            ((annualH2mCHPHeat * 1e2 / 1.5) *  3.725 * 0.03) / \
+            ((annualH2mCHPHeat * 1e6 / 15000) *  3.725 * 0.03) / \
                 (1 - np.pow(1 + 0.03, -20))
 
         z[INV_COST] +=  investmentCostAnnualH2mCHPheat
 
         operationalCostAnnualH2mCHPheat = \
-            (annualH2mCHPHeat * 1e2 / 1.5) * 0.0417 * 3.725
+            (annualH2mCHPHeat * 1e6 / 15000) * 0.0417 * 3.725
 
         z[FIX_COST] += operationalCostAnnualH2mCHPheat
 
@@ -296,7 +313,7 @@ class CEIS2021(BaseModel):
                                get_loc('input_HH_NgasCHP_heat')]
         FU_N_Gas_CHP = 0.284618279
         investmentCostAnnualnGasmCHPheat = (
-            (annualnGasmCHPHeat * 1e2 / 1.5) * \
+            (annualnGasmCHPHeat * 1e6 / 15000) * \
                 ((0.9 * 1000 * self.scenario['nGasCoeff1'] * 15) / \
                  (self.scenario['nGasCoeff2'] * FU_N_Gas_CHP * 366 * 24)) * 0.03) / \
                     (1 - np.pow(1 + 0.03, -20)) + \
@@ -306,7 +323,7 @@ class CEIS2021(BaseModel):
         z[INV_COST] += investmentCostAnnualnGasmCHPheat
 
         operationalCostAnnualnGasmCHPheat = \
-            (annualnGasmCHPHeat * 1e2 / 1.5) * \
+            (annualnGasmCHPHeat * 1e6 / 15000) * \
                 self.scenario['nGasHeatCoeff'] * \
                 ((0.9 * 1000 * self.scenario['nGasCoeff1'] * 15) / \
                 (0.48 * FU_N_Gas_CHP * 366 * 24)) + \
@@ -318,7 +335,7 @@ class CEIS2021(BaseModel):
                                   get_loc('input_HH_BioCHP_heat')]
         FU_Biogas_CHP = 0.284618279
         investmentCostBiomassmCHP = (
-            (annualBiomassmCHPHeat * 1e2 / 1.5) * \
+            (annualBiomassmCHPHeat * 1e6 / 15000) * \
                 ((self.scenario['biomassCoeff1'] * 1000 *
                   self.scenario['biomassCoeff2'] * 15) /
                   (self.scenario['biomassCoeff3'] * FU_Biogas_CHP * 366 * 24))
@@ -329,7 +346,7 @@ class CEIS2021(BaseModel):
         z[INV_COST] += investmentCostBiomassmCHP
 
         operationalCostBiomassmCHP = \
-            (annualBiomassmCHPHeat * 1e2 / 1.5) * self.scenario['biomassCoeff4'] * \
+            (annualBiomassmCHPHeat * 1e6 / 15000) * self.scenario['biomassCoeff4'] * \
                 ((self.scenario['biomassCoeff1'] * 1000 *
                   self.scenario['biomassCoeff2'] * 15) /
                 (self.scenario['biomassCoeff3'] * FU_Biogas_CHP * 366 * 24)) \
@@ -337,14 +354,13 @@ class CEIS2021(BaseModel):
 
         z[FIX_COST] += operationalCostBiomassmCHP
 
-        elCarDemandInKM = v[:, self.vars.index.\
-                            get_loc('input_transport_TWh')]
         elCarDemandInGWh = \
-            elCarDemandInKM * self.scenario['efficiencyEVCar'] / 1e6
+            electriCarDemand * self.scenario['efficiencyEVCar'] / 1e6
         h2CarDemandInKM = v[:, self.vars.index.\
-                            get_loc('input_fuel_Transport[6]')]
+                            get_loc('input_fuel_Transport[6]')] / (self.scenario['efficiencyH2Car'] / 1e6)
+                            #get_loc('input_fuel_Transport[6]')]
         # Cost for H2 cars
-        elForH2ForTransport = h2CarDemandInKM * 0.239 / 0.7217 / 1e6
+        elForH2ForTransport = h2CarDemandInKM * self.scenario['efficiencyH2Car'] / self.scenario['efficiencyElectrolyzer'] / 1e6
         elForH2Heat = annualH2mCHPHeat / 0.97 / 0.7217 / 1e6
 
         elecGridDistributionCost = self.scenario['gridCost'] * \
@@ -362,9 +378,9 @@ class CEIS2021(BaseModel):
 
         # Cost for H2 cars
         investmentCostForH2Cars = \
-            h2CarDemandInKM / 12900 * self.scenario['H2CarsCost'] * 0.03 / \
+            h2CarDemandInKM / self.averageKMPerYearPerCar * self.scenario['H2CarsCost'] * 0.03 / \
                 (1 - np.pow(1 + 0.03, -12)) + h2CarDemandInKM / \
-                    12900 * self.scenario['H2CarsCoeff1'] * 0.03 / \
+                    self.averageKMPerYearPerCar * self.scenario['H2CarsCoeff1'] * 0.03 / \
                         (1 - np.pow(1 + 0.03, -12))
 
         z[INV_COST] += investmentCostForH2Cars
@@ -417,106 +433,25 @@ class CEIS2021(BaseModel):
 
         out["F"] = np.array([localCO2emission, actualAnnualCost]).T
 
-        # # Calculation of constraints
-        # for _, row in self.vars.iterrows():
-        #     if row['category'] == "Heat demand":
-        #         heatDemand = v[:, self.vars.index.get_loc(row.name)]
-        #         solarInput = v[:, self.vars.index.get_loc(row.name) + 8]
-        #         solarStorage = v[:, self.vars.index.get_loc(row.name) + 16]
-        #         xSolarInput = True if row.name == 'input_HH_HP_solar' \
-        #             else False
-        #         # Solar utilization caluculation changes when considering HP
-        #         solarUtilization = self.solarUtilization(
-        #             heatDemand, solarInput, solarStorage, xSolarInput
-        #         )
+        # Calculation of constraints
+        # TODO: id totalSolaerThermalInput updated before using it here? Last update was when writing variables.
+        # PV constraint
+        PV_land = (v[:, self.vars.index.get_loc('input_RES2_capacity')] - 636.72) / \
+            self.scenario['PVCapCoeff1']
+        solar_thermal_land = (totalSolarThermalInput * 1e6 /
+            self.scenario['PVCapCoeff2'])
+        PVConstraint = - self.scenario['totalLand'] + PV_land + solar_thermal_land
+        # Import constraint
+        importConstraint = - z[MAX_IMPORT]
+        # Export constraint
+        exportConstraint = - z[MAX_EXPORT]
 
-        # # PV constraint
-        # PVConstraint = self.scenario['totalLand'] - \
-        #     (v[:, self.vars.index.get_loc('input_RES2_capacity')] - 636.72) / \
-        #         self.scenario['PVCapCoeff1'] + \
-        #             (totalSolarThermalInput * 1e6 /
-        #              self.scenario['PVCapCoeff2'])
-        # # Import constraint
-        # importConstraint = - z[MAX_IMPORT]
-        # # Export constraint
-        # exportConstraint = - z[MAX_EXPORT]
-
-        # out["G"] = np.column_stack([
-        #     PVConstraint,
-        #     importConstraint,
-        #     exportConstraint
-        # ])
+        out["G"] = np.column_stack([
+            PVConstraint,
+            importConstraint,
+            exportConstraint
+        ])
 
 
-    def solarUtilization(self, heatDemand, solarInput, storageDays,
-                         xSolarInput=False):
-        # Compute scalar values
-        totalSolarProduction = self.solar_production.sum()
-        totalThermalDemand = self.thermal_demand.sum()
-
-        storage = (heatDemand / 8784) * storageDays * 24
-
-        hourProduction = \
-            np.expand_dims(self.solar_production, 0).T * \
-            np.expand_dims(solarInput, 0) / \
-            totalSolarProduction
-        hourDemand = \
-            np.expand_dims(self.thermal_demand, 0).T * \
-            np.expand_dims(heatDemand, 0) / \
-            totalThermalDemand
-
-        mask = hourProduction <= hourDemand
-
-        delta = hourDemand - hourProduction
-
-        # Initialize space for solar utilization
-        solarUtilization = np.zeros(len(heatDemand))
-        storageContent = np.zeros_like(heatDemand)
-
-        stop = 10 if xSolarInput else 1
-        iter = 0
-
-        percentage = np.zeros_like(heatDemand)
-        start, end = np.zeros_like(heatDemand), np.zeros_like(heatDemand)
-
-        while iter < stop or np.any(percentage >= 10):
-            # Select only individuals with a percentage greater than 10
-            fx = percentage >= 10
-
-            start[fx] = end[fx]
-            storageContent[fx] = start[fx]
-            utilization = np.zeros_like(heatDemand)
-            for i in range(len(self.solar_production)):
-
-                utilization[fx] = np.where(
-                    mask[i, fx],
-                    utilization[fx] + hourProduction[i, fx] + \
-                        np.minimum(storageContent[fx], delta[i, fx]),
-                    utilization[fx] + hourDemand[i, fx]
-                )
-
-                storageContent[fx] = np.where(
-                    mask[i, fx],
-                    storageContent[fx] - np.minimum(storageContent[fx],
-                                                    delta[i, fx]),
-                    storageContent[fx] - delta[i, fx]
-                )
-
-                storageContent[fx] = np.where(
-                    mask[i, fx],
-                    np.maximum(storageContent[fx], 0),
-                    np.minimum(storageContent[fx], storage[fx])
-                )
-
-            end[fx] = storageContent[fx]
-
-            eps = 1e-6
-
-            percentage[fx] = np.where(
-                np.abs(start[fx] - end[fx]) != 0,
-                np.abs(start[fx] - end[fx]) / \
-                    np.maximum(start[fx] + eps, end[fx] + eps) * 100,
-                0
-            )
-            iter += 1
-        return solarUtilization
+if __name__ == "__main__":
+    pass
