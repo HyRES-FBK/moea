@@ -174,3 +174,7 @@ cython_debug/
 
 # EnergyPLAN operation files
 EnergyPLAN*/
+
+# Remove the Oslo case
+docs/use-cases/oslo.ipynb
+docs/use-cases/oslo_results.csv

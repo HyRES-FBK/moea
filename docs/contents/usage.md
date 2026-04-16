@@ -1,4 +1,9 @@
-
+---
+authors:
+  - name: Michele Urbani
+    affiliation: Fondazione Bruno Kessler
+    department: Sustainable Energy Center
+---
 # MOEA Usage
 
 Setup of an experiment is carried out in EnergyPLAN, which provides a handy GUI.

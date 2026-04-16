@@ -1,3 +1,8 @@
+---
+authors:
+  - name: Michele Urbani
+    affiliation: Fondazione Bruno Kessler
+---
 # MOEA Documentation
 
 ## The ``BaseProblem`` class

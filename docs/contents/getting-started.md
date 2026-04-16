@@ -1,3 +1,8 @@
+---
+authors:
+  - name: Michele Urbani
+    affiliation: Fondazione Bruno Kessler
+---
 # Get started
 
 This short guide explains how to setup a Python environment and run a case study

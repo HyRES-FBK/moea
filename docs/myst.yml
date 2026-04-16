@@ -1,0 +1,17 @@
+# See docs at: https://mystmd.org/guide/frontmatter
+version: 1
+project:
+  id: 166d8595-151c-48e4-aa36-700da844af11
+  title: Multi-Objective Optimization of Energy Scenarions with EnergyPLAN
+  description: The project wraps multi-objective optimization algorithms and EnergyPLAN parser/API.
+  keywords: [EnergyPLAN, energy, simulation, optimization, moea]
+  authors: [Michele Urbani, Sara Urrea Sanchez]
+  github: https://github.com/HyRES-FBK/moea
+  # To autogenerate a Table of Contents, run "jupyter book init --write-toc"
+site:
+  template: book-theme
+  options:
+  #   favicon: favicon.ico
+    logo: fbk-logo.png
+  parts:
+    footer: (c) Hydrogen Technologies and Resilient Energy Unit (HyRES)

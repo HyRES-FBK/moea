@@ -1,3 +1,8 @@
+---
+authors:
+  - name: Michele Urbani
+    affiliation: Fondazione Bruno Kessler
+---
 # EnergyPLAN
 
 EnergyPLAN is software for the simulation of energy systems operations at a
